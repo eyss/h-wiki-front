@@ -1,0 +1,204 @@
+@mixin propertyModal($zindex) {
+    background-color: rgba(0, 0, 0, .5);
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: $zindex;
+    display: none;
+}
+
+@mixin styleButtonBottomModal($width) {
+    background-color: #ddd;
+    border: none;
+    padding: .3em 0;
+    color: rgb(122, 122, 122);
+    border-radius: .3em;
+    outline: 0;
+    cursor: pointer;
+    width: $width;
+}
+
+*{ margin: 0px; }
+
+div#container{
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #8f8e8e;
+    
+    > header{
+        background-color: #FFF;
+        height: 10vh;
+        display: flex;
+
+        > div {
+            width: 50%;
+            height: 100%;
+            display: flex;
+        }
+
+        > div:first-child { align-items: center; }
+
+        > div:first-child > h1{
+            text-indent: 1em;
+            font-weight: 400!important;
+        }
+
+        > div:last-child {
+            align-items: flex-end;
+            justify-content: flex-end;
+        }
+
+        > div:last-child > button {
+            margin-right: 2em;
+            margin-bottom: .5em;
+            padding: .5em .8em;
+            cursor: pointer;
+        }
+    }
+
+    > section{
+        height: 90vh;
+        display: flex;
+        overflow-x: auto;
+    
+        > div{
+            overflow-x:hidden;
+            overflow-y: scroll;
+            
+            width: 490px;
+            height: calc(100% - 16px);
+            margin: 8px;
+            background-color: rgb(255, 255, 255);
+            box-sizing: border-box;
+            padding: 25px;
+
+            > article {
+                > div:first-child{
+                    color: red;
+                    font-size: 1.5em;
+                    padding: 15px 0;
+                }
+
+                > div:last-child > p{
+                    text-indent: 1.3em;
+                    margin-bottom: 1em;
+                }
+            }
+        }
+    }
+}
+
+div#modal-create-page{
+    @include propertyModal(10000);
+    
+    > div {
+        width: 60%;
+        height: 85%;
+        background-color: white;
+        display: flex;
+        flex-direction: column;
+    
+        > header {
+            height: 25px;
+            border-top: 1px solid #ddd;
+            background: #f1f1f1;
+            display: flex;
+            align-items: center;
+            >label {
+                color: rgb(122, 122, 122);
+                font-size: 12.5px;
+                text-indent: .8em;
+            }
+        }
+
+        > section {
+            overflow-y: auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            >div:first-child{
+                height: 55px;
+                max-height: 55px;
+                min-height: 55px;
+                
+                position: relative;
+                display: flex;
+                justify-content: center;
+                >input {
+                    position: absolute;
+                    bottom: 0;
+                    width: 96%;
+                    height: 80%;
+                    border: none;
+                    border-bottom: 1px solid rgb(221,221,221);
+                    outline: 0;
+                    font-size: 19px;
+                    text-indent: .15555em;
+                    color: rgb(161, 161, 161);
+
+                    &::placeholder{
+                        color: #ddd;
+                    }
+                }
+            }
+
+            >div:last-child{
+                height: 95%;
+                overflow-y: scroll;
+                overflow-x: hidden;
+                padding: 1em;
+            }
+        }
+
+
+
+        > footer {
+            box-shadow: rgb(221,221,221) 1px 1px 0px inset;
+            height: 45px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            >div {
+                width: 50%;
+
+                &:first-child{
+                    >div > button {
+                        @include styleButtonBottomModal(120px);
+                        margin-left: 1.5em;
+                    }
+                }
+
+                &:last-child{
+                    >div{
+                        display: flex;
+                        justify-content: flex-end;
+                        >button {
+                            @include styleButtonBottomModal(100px);
+
+                            &:last-child{
+                                margin: 0 1.5em;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+div#modal-add-section {
+    @include propertyModal(15000);
+    
+    > div {
+        width: 58%;
+        height: 78%;
+        background-color: white;
+    }
+}
