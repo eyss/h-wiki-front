@@ -57,7 +57,7 @@ class App extends React.Component {
       }
 
       var data = {
-        title: `## Pages: \n`,
+        title: `## Pageees: \n`,
         address: undefined,
         sections: [{
           content: arrLinks.join(' '),
