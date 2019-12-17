@@ -1,14 +1,10 @@
 import React from 'react';
 import '../styles/PreviewSection.scss';
+import MarkdownRenderer from 'react-markdown-renderer'
 
 export default class PreviewSection extends React.Component {
     constructor(props) {
       super(props);
-      this.content = React.createRef();
-    }
-    
-    componentDidMount() {
-      this.content.current.innerHTML = this.props.content;
     }
 
     openEditor = (e) => {
@@ -23,7 +19,7 @@ export default class PreviewSection extends React.Component {
         return(
             <div className='preview-section'>
                 <div>
-                  <div ref={this.content}></div>
+                  <MarkdownRenderer markdown={this.props.content} />
                   <div>
                     <div>
                       <button data-mode='edit' onClick={this.openEditor}>Edit</button>

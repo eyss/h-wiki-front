@@ -33,8 +33,9 @@ div#container{
     
     > header{
         background-color: #FFF;
-        height: 10vh;
+        height: 7vh;
         display: flex;
+        box-shadow: #0E37FF 0px -2px 0px inset;
 
         > div {
             width: 50%;
@@ -44,9 +45,11 @@ div#container{
 
         > div:first-child { align-items: center; }
 
-        > div:first-child > h1{
-            text-indent: 1em;
-            font-weight: 400!important;
+        > div:first-child > label{
+            text-indent: 1.3em;
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #0E37FF;
         }
 
         > div:last-child {
@@ -59,14 +62,27 @@ div#container{
             margin-bottom: .5em;
             padding: .5em .8em;
             cursor: pointer;
+            background-color: #ddd;
+            border: none;
+            padding: .3em 0;
+            width: 100px;
+            color: #0E37FF;
+            border-radius: .3em;
+            outline: 0;
+            box-shadow: #0E37FF 1px 1px 1px inset, #0E37FF -1px -1px 1px inset;
+            transition: .5s;
+            &:hover{
+                background-color: #0E37FF;
+                color: white;
+            }
         }
     }
 
     > section{
-        height: 90vh;
+        height: 93vh;
         display: flex;
         overflow-x: auto;
-    
+        flex-direction: row;
         > div{
             overflow-x:hidden;
             overflow-y: scroll;
@@ -77,6 +93,10 @@ div#container{
             background-color: rgb(255, 255, 255);
             box-sizing: border-box;
             padding: 25px;
+            >div:first-child {
+                display: flex;
+                justify-content: flex-end;
+            }
 
             > article {
                 > div:first-child{
@@ -91,6 +111,11 @@ div#container{
                 }
             }
         }
+
+        > div:first-child>div:first-child{
+            display: none;
+        }
+
     }
 }
 

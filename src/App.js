@@ -11,107 +11,100 @@ class App extends React.Component {
   constructor(props) {
       super(props);
       this.state = {
-        arg1: 'default',
         currentURLParemter: [],
         parameters: [],
         titles: [],
         contents: [],
         pages: [],
         hash: '',
-        titlenp : 'Titulo prueba en el state',
-        contentsnp: [
-          {
-            parent_page_anchor: "",
-            element_type: "text",
-            element_content: "Soy un paragrafoo",
-            TradHTML: "<p>Soy un paragrafo</p>"
-          },
-          {
-            parent_page_anchor: "",
-            element_type: "text",
-            element_content: "# Soy un tituloo",
-            TradHTML: "<h1>Soy un titulo</h1>"
-          },
-          {
-            parent_page_anchor: "",
-            element_type: "text",
-            element_content: "## Soy un titulo h2 \n y un parrafo",
-            TradHTML: "<h2>Soy un titulo</h2> <p>y un titulo</p>"
-          },
-          {
-            parent_page_anchor: "",
-            element_type: "text",
-            element_content: "## Soy un titulo h2 2 \n y un parrafo",
-            TradHTML: "<h2>Soy un titulo 2</h2>  <p>y un titulo</p>"
-          }
-        ],
+        titlenp : '',
+        contentsnp: [],
         editorParam: [{
           pos: 1,
           mode: 'undefined'
-        }]
+        }],
+        renderedPages: [],
+        links: [],
+        addresses: []
       };
   }
 
   componentDidMount() {
-    this.init();
-  }
-  
-  init() {
     var _this = this;
-    let hash = window.location.hash,
-        param;
-
-    if (!hash.length) {
-      param = ['home'];
-      window.location.hash = 'home';
-    } else {
-      param = hash.split('/');
-      param[0] = param[0].replace('#', '');
-    }
-
-    this.setState({
-      currentURLParemter: param,
-      parameters: param
-    }, function(){
-      _this.initRendering();
-    });
+    console.log('Component did mount');
+    connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+        callZome('wiki', 'wiki', 'get_pages_address') ({})
+        .then( addresses => {
+          addresses = JSON.parse(addresses);
+          addresses = addresses.Ok;
+          this.setState({
+            addresses : addresses
+          }, ()=>{
+            _this._initRenderig();
+          });
+        })
+    })
   }
 
-  initRendering() {
-    
-    let _this = this,
-        urlParemter = this.state.currentURLParemter,
-        view = urlParemter[0],
-        newURLParemter = urlParemter.slice(1, urlParemter.length);
+  _initRenderig() {
+    if (!this.state.addresses.length) {
 
-    if (urlParemter.length !== 0) {
-      fetch('/graphql',{
-        method: 'POST',
-        Accept: 'api_version=2',
-        headers:{ 'Content-Type' : 'application/graphql' },
-        body: `{getPage(pageId:"${view}"){title,content}}`,
+      var contentLinks = this.state.links,
+          arrLinks = [];
+          
+      for(var i in contentLinks) {
+        arrLinks[i] = `* [${contentLinks[i].content}](${contentLinks[i].href})\n`;
+      }
+
+      var data = {
+        title: `## Pages: \n`,
+        address: undefined,
+        sections: [{
+          content: arrLinks.join(' '),
+          address: undefined
+        }],
+      };
+      var pages = [<Page handleToUpdate = {this.handleToUpdate.bind(this)} data = {data} />];
+      this.setState({
+        pages: pages
       })
-      .then( r => r.json() )
-      .then( data => {
-        // Reposicionar los elementos, contenido y parametros
-        _this.setState({
-          page: _this.state.pages.push(<Page handleToUpdate = {this.handleToUpdate.bind(this)} data = {data} />),
-          currentURLParemter: newURLParemter
-        }, () => {
-          _this.initRendering();
+    } else {
+      var _this = this;
+      connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+        callZome('wiki', 'wiki', 'get_all') ({
+          address:  this.state.addresses[0]
+        })
+        .then( pageData => {
+          pageData = JSON.parse(pageData);
+          pageData = pageData.Ok;
+          console.clear();
+          console.log(pageData);
+          var link = {};
+          link.content = pageData.page.titulo;
+          link.href = pageData.page_name;
+        
+          var links = this.state.links;
+          links[links.length] = link;
+          this.setState({
+            links : links,
+            addresses: this.state.addresses.splice(1, this.state.addresses.length)
+          }, () => {
+            _this._initRenderig();
+          });
         });
-      });
+    });
     }
   }
-  
+    
   handleToUpdate(e){
-
-    var cont = 2,
-        link = e.target,
-        parent = link.parentNode,
-        pos,
-        paramURL = link.textContent.replace(/\s/g, '_')      
-
+    e.preventDefault();
+    let el = e.target,
+        link = el.href.split('/'),
+        address = link[link.length-1],
+        cont = 2,
+        parent = el.parentNode,
+        pos;
+   
     for (var i = 0; i<cont; i++) {
       if (parent.dataset.page) {
         pos = parent.dataset.page;
@@ -119,33 +112,42 @@ class App extends React.Component {
       } 
       parent = parent.parentNode;
       cont+=1;
-    }
+    } 
 
-    let init = parseInt(pos) + 1, 
-        end = this.state.pages.length-1;
-    
-    var x = this.state.pages,
-        y = x.splice(init, end);
-    
-    console.log(y)
+    var currentPages = this.state.pages;
+    currentPages.splice((parseInt(pos)+1), currentPages.length-1);
 
-    fetch('/graphql',{
-      method: 'POST',
-      Accept: 'api_version=2',
-      headers:{ 'Content-Type' : 'application/graphql' },
-      body: `{getPage(pageId:"page"){title,content}}`,
-    })
-    .then( r => r.json() )
-    .then( data => {
-      // Reposicionar los elementos, contenido y parametros
-      var newIntfz  = <Page handleToUpdate = {this.handleToUpdate.bind(this)} data = {data} />;
-      this.setState({
-        page: this.state.pages.push(newIntfz),
-      }, () => {
-        this.initRendering();
-      });
+    connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+        callZome('wiki', 'wiki', 'get_all') ({
+          address: address
+        })
+        .then( page => {
+          page = JSON.parse(page);
+          page = page.Ok;
+
+          var data = {
+            title: page.page.titulo,
+            address: page.page_name,
+            sections: []
+          };
+          var cSections = page.redered_page_element;
+
+          for(var j in cSections) {
+            data.sections[j] = {};
+            data.sections[j].content = cSections[j].element_content;
+            data.sections[j].render = cSections[j].element_content;
+            data.sections[j].address = page.vector_address[j]
+          }
+          
+          var renderedPages = [data];
+          // console.log(renderedPages)
+          var updatedPages = [...currentPages, <Page handleToUpdate = {this.handleToUpdate.bind(this)} data = {data} />]
+          this.setState({
+            pages: updatedPages,
+            renderedPages: [...this.state.renderedPages, renderedPages]
+          })
+        })
     });
-
   }
 
   closeModal = () => {    
@@ -172,7 +174,7 @@ class App extends React.Component {
 
   getContentSection(pos=null, mode = null) {
     var content = '';
-    if (pos == 0 || pos && mode.toString() === 'edit'){
+    if (pos === 0 || pos && mode.toString() === 'edit'){
       if(pos !== undefined) {
         pos = parseInt(pos);
         var element = this.state.contentsnp[pos];
@@ -199,8 +201,37 @@ class App extends React.Component {
     })
   }
 
-  saveSection(pos = null) {
-    var updatedSections = this.state.contentsnp;
+  updateSectionPage(pos, content, mode = null) {
+
+    var section = {
+      parent_page_anchor: "",
+      element_type: "text",
+      element_content: content.markdown,
+      render: content.markdown
+    },
+    contentsnp = this.state.contentsnp,
+    _this = this,
+    pEnd;
+
+    if (mode === 'addSB' || mode === 'add') {
+      pos = mode === 'add' ? contentsnp.length : (parseInt(pos)+1);
+      pEnd=0;
+    } else if (mode === 'edit') {
+      pEnd=1;
+    }
+    contentsnp.splice(pos, pEnd, section);
+    this.setState({
+      contentsnp: []
+    }, function() {
+      _this.setState({
+        contentsnp: contentsnp
+      }, function(){
+        document
+          .querySelector('#modal-add-section')
+            .style.display = 'none';
+      })
+    })
+    console.log(mode);
   }
 
   removeSection = (pos) => {
@@ -220,12 +251,43 @@ class App extends React.Component {
     })
   }
 
+  storePage = () => {
+    var _this = this;
+    connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+        callZome('wiki', 'wiki', 'create_page_with_elements') ({
+          titulo: _this.state.titlenp,
+          contents: _this.state.contentsnp
+        })
+        .then( r => {
+          console.log(r)
+          _this.setState({
+            titlenp: '',
+            contentsnp: []
+          }, () => {
+            _this.closeModal();
+          });
+        })
+    })
+  }
+
+  showPageRendered = (e) => {
+    var pos = (parseInt(e.target.dataset.posSect)-1);
+    var page = this.state.renderedPages[pos][0];
+    var _this = this;
+    this.setState({
+      titlenp: page.title,
+      contentsnp: page.sections, 
+    }, () => {
+      _this.showModal();
+    })
+  }
+
   render() {
     return (
       <div id='container'>
         <header>
           <div>
-            <h1>HoloWiki</h1>
+            <label>HoloWiki</label>
           </div>
           <div>
             <button onClick={this.showModal}>Create page</button>
@@ -235,11 +297,34 @@ class App extends React.Component {
           {this.state.pages.map((page, key)=>{
             return(
               <div key={key} data-page={key} id={key}>
+                <div>
+                  <button onClick={this.showPageRendered} data-pos-sect={key}>Editar</button>
+                </div>
                 {page}
               </div>
             )
           })}
         </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         <div id='modal-create-page'>
@@ -266,9 +351,8 @@ class App extends React.Component {
                     <PreviewSection 
                       key = {key}
                       pos = {key}
-                      content = {data.TradHTML}
+                      content = {data.render}
                       openEditor = {this.openEditor.bind(this)}
-
                       removeSection = {this.removeSection.bind(this)}
                       //funcion para elinminar
                       //funcion para editar
@@ -285,13 +369,15 @@ class App extends React.Component {
               <div>
                 <div>
                   <button onClick={e=>{this.openEditor(null, 'add')}}>Add new section</button>
+                  <button>Delete page</button>
+
                 </div>
               </div>
 
               <div>
                 <div>
                   <button onClick={this.closeModal}>Cancel</button>
-                  <button>Save</button>
+                  <button onClick={this.storePage}>Save</button>
                 </div>
               </div>
 
@@ -308,7 +394,7 @@ class App extends React.Component {
                     pos = {param.pos}
                     mode = {param.mode}
                     getContentSection = {this.getContentSection.bind(this)}
-                    saveSection = {this.saveSection.bind(this)}
+                    updateSectionPage = {this.updateSectionPage.bind(this)}
                   />
                 )
               })}

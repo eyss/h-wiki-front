@@ -12,12 +12,15 @@ export default class Editor extends React.Component {
 
     this.content = '';
   }
-  handleEditorChange ({html, text}) {    
-    console.log('handleEditorChange', html, text)
-  }
 
-  handleGetMdValue = () => {   
-    this.mdEditor && console.log(this.mdEditor.getMdValue())      
+  updateSectionPage = () => {   
+    this.props.updateSectionPage(
+      this.props.pos, 
+      {
+        markdown: this.mdEditor.getMdValue(),
+        html: this.mdEditor.getHtmlValue()
+      },
+      this.props.mode);
   }
 
   closeModal = () => {    
@@ -37,13 +40,12 @@ export default class Editor extends React.Component {
             ref={node => this.mdEditor = node}  
             value={this.props.getContentSection(this.props.pos, this.props.mode)}
             renderHTML={(text) => this.mdParser.render(text)}
-            onChange={this.handleEditorChange} 
           />
         </div>
         <footer>
           <div>
             <button onClick={this.closeModal}>Cancel</button>
-            <button onClick={this.handleGetMdValue}>Add</button>
+            <button onClick={this.updateSectionPage}>Add</button>
           </div>
         </footer>               
       </div>
