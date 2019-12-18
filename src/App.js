@@ -4,6 +4,7 @@ import { connect } from '@holochain/hc-web-client';
 import './styles/App.scss';
 import Editor from './components/Editor';
 import PreviewSection from './components/PreviewSection';
+import { MdCreate } from "react-icons/md";
 
 //ParentA component
 class App extends React.Component {
@@ -15,7 +16,6 @@ class App extends React.Component {
         parameters: [],
         titles: [],
         contents: [],
-        pages: [],
         hash: '',
         titlenp : '',
         contentsnp: [],
@@ -25,23 +25,44 @@ class App extends React.Component {
         }],
         renderedPages: [],
         links: [],
-        addresses: []
+        addresses: [],
+
+
+
+        existingPages: [], //array de json { title:, address, }
+        pages: [], // array de json {title:, address:, sections: [{content:, address:,} ...]}
+        newData: {
+          title: '',
+          sections: [
+          ]
+        },
+        mPreload: '',
+
       };
   }
 
   componentDidMount() {
-    var _this = this;
-    console.log('Component did mount');
-    connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
-        callZome('wiki', 'wiki', 'get_pages_address') ({})
-        .then( addresses => {
-          addresses = JSON.parse(addresses);
-          addresses = addresses.Ok;
-          this.setState({
-            addresses : addresses
-          }, ()=>{
-            _this._initRenderig();
-          });
+    // var _this = this;
+    // connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
+    //     callZome('wiki', 'wiki', 'get_pages_address') ({})
+    //     .then( addresses => {
+    //       addresses = JSON.parse(addresses);
+    //       addresses = addresses.Ok;
+    //       this.setState({
+    //         addresses : addresses
+    //       }, ()=>{
+    //         console.log(_this.state.addresses);
+
+    //         _this._initRenderig();
+    //       });
+    //     })
+    // })
+
+    connect({ url: "ws://192.168.1.63:8885" })
+      .then(({callZome, close}) => {
+        callZome('wiki', 'wiki', 'get_home_page') ({})
+        .then( res => {
+          console.log(res)
         })
     })
   }
@@ -56,28 +77,28 @@ class App extends React.Component {
         arrLinks[i] = `* [${contentLinks[i].content}](${contentLinks[i].href})\n`;
       }
 
-      var data = {
-        title: `## Pageees: \n`,
-        address: undefined,
+      var page = {
+        title: 'Welcome Visitors',
         sections: [{
-          content: arrLinks.join(' '),
+          // content: arrLinks.join(' '),
+          content: 'Lorem ipsum dolor sit amet consectetur, adipisicing elit. Illum architecto ullam itaque laboriosam voluptatibus nam fugit asperiores, aut laudantium rerum! Quibusdam ipsa illum ullam dicta rem tenetur temporibus nam sed.',
           address: undefined
         }],
       };
-      var pages = [<Page handleToUpdate = {this.handleToUpdate.bind(this)} data = {data} />];
+
       this.setState({
-        pages: pages
+        pages: [page, page]
       })
+
     } else {
       var _this = this;
-      connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+      connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
         callZome('wiki', 'wiki', 'get_all') ({
           address:  this.state.addresses[0]
         })
         .then( pageData => {
           pageData = JSON.parse(pageData);
           pageData = pageData.Ok;
-          console.clear();
           console.log(pageData);
           var link = {};
           link.content = pageData.page.titulo;
@@ -117,13 +138,16 @@ class App extends React.Component {
     var currentPages = this.state.pages;
     currentPages.splice((parseInt(pos)+1), currentPages.length-1);
 
-    connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+    connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
         callZome('wiki', 'wiki', 'get_all') ({
           address: address
         })
         .then( page => {
           page = JSON.parse(page);
+          console.log(page)
           page = page.Ok;
+
+          
 
           var data = {
             title: page.page.titulo,
@@ -253,7 +277,7 @@ class App extends React.Component {
 
   storePage = () => {
     var _this = this;
-    connect({ url: "ws://192.168.1.63:8888" }).then(({callZome, close}) => {
+    connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
         callZome('wiki', 'wiki', 'create_page_with_elements') ({
           titulo: _this.state.titlenp,
           contents: _this.state.contentsnp
@@ -285,25 +309,33 @@ class App extends React.Component {
   render() {
     return (
       <div id='container'>
+
         <header>
           <div>
-            <label>HoloWiki</label>
+              <div></div>
           </div>
           <div>
             <button onClick={this.showModal}>Create page</button>
           </div>
         </header>
+
         <section>
-          {this.state.pages.map((page, key)=>{
-            return(
-              <div key={key} data-page={key} id={key}>
-                <div>
-                  <button onClick={this.showPageRendered} data-pos-sect={key}>Editar</button>
-                </div>
-                {page}
-              </div>
-            )
-          })}
+          <div>
+            {
+              this.state.pages.map((dataPage, key) => {
+                return (
+                  <div key={key}>
+                    <div>
+                      <button data-pos-sect={key}>
+                        <MdCreate />
+                      </button>
+                    </div>
+                    <Page data={dataPage} handleToUpdate = {this.handleToUpdate.bind(this)}  />
+                  </div>
+                )
+              })
+            }
+          </div>
         </section>
 
 
@@ -400,6 +432,13 @@ class App extends React.Component {
               })}
           </div>
         </div>
+
+        <div id='preload'>
+            <div>
+              <label>{this.state.mPreload}</label>
+            </div>
+        </div>
+
       </div>
     )
   }

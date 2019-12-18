@@ -1,5 +1,11 @@
+$primary-color: #0E37FF;
+
+@function oPrimaryColor($opacity) {
+    @return rgba(14,55,255, $opacity);
+}
+
 @mixin propertyModal($zindex) {
-    background-color: rgba(0, 0, 0, .5);
+    background-color: oPrimaryColor(0.6);
     width: 100vw;
     height: 100vh;
     position: absolute;
@@ -29,13 +35,15 @@ div#container{
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background-color: #8f8e8e;
+    width: 100vw;
+    background-color: white;
     
     > header{
-        background-color: #FFF;
-        height: 7vh;
+        height: 6vh;
+        width: 100%;
         display: flex;
-        box-shadow: #0E37FF 0px -2px 0px inset;
+        background-color: $primary-color;
+        z-index: 25000;
 
         > div {
             width: 50%;
@@ -43,13 +51,16 @@ div#container{
             display: flex;
         }
 
-        > div:first-child { align-items: center; }
-
-        > div:first-child > label{
-            text-indent: 1.3em;
-            font-weight: bold;
-            font-size: 1.3em;
-            color: #0E37FF;
+        > div:first-child { 
+            align-items: center;
+            > div {
+                height: 6vh;
+                width: 10vw;
+                background-image: url('/LogoH-wik-3.png');
+                background-position: center;
+                background-size:55%;
+                background-repeat: no-repeat;
+            }
         }
 
         > div:last-child {
@@ -62,14 +73,14 @@ div#container{
             margin-bottom: .5em;
             padding: .5em .8em;
             cursor: pointer;
-            background-color: #ddd;
+            background-color: transparent;
             border: none;
             padding: .3em 0;
             width: 100px;
-            color: #0E37FF;
+            color: white;
             border-radius: .3em;
             outline: 0;
-            box-shadow: #0E37FF 1px 1px 1px inset, #0E37FF -1px -1px 1px inset;
+            box-shadow: white 1px 1px 1px inset, white -1px -1px 1px inset;
             transition: .5s;
             &:hover{
                 background-color: #0E37FF;
@@ -79,45 +90,110 @@ div#container{
     }
 
     > section{
-        height: 93vh;
-        display: flex;
-        overflow-x: auto;
-        flex-direction: row;
-        > div{
-            overflow-x:hidden;
-            overflow-y: scroll;
+       width: inherit;
+       height: 94vh;
+
+       overflow-x: auto;
+       overflow-y: hidden;
+
+       &::-webkit-scrollbar {
+            width: 100%;
+            height: 10px;
+       }
+       &::-webkit-scrollbar-track { background: #f5f5f5; }
+       &::-webkit-scrollbar-thumb { background: #cccccc; }
+
+       > div{
+           height: 100%;
+           display: flex;
+           flex-wrap: nowrap;
             
-            width: 490px;
-            height: calc(100% - 16px);
-            margin: 8px;
-            background-color: rgb(255, 255, 255);
-            box-sizing: border-box;
-            padding: 25px;
-            >div:first-child {
-                display: flex;
-                justify-content: flex-end;
-            }
+            > div {
+                margin: 15px 15px;
+                min-width: 470px!important;
+                width: 470px!important;
+                max-width: 470px!important;
+                position: relative;
 
-            > article {
-                > div:first-child{
-                    color: red;
-                    font-size: 1.5em;
-                    padding: 15px 0;
+                box-shadow: rgba(0,0,0,.1) 1px 1px 2px, rgba(0,0,0,.2) -1px -1px 15px;
+
+                overflow-x:hidden;
+                overflow-y: scroll;
+                &::-webkit-scrollbar { width: 8px; }
+                &::-webkit-scrollbar-track { background: #f5f5f5; }
+                &::-webkit-scrollbar-thumb { background: #cccccc; }
+
+                //Contenedor del boton editar
+                >div:first-child {
+                    position: absolute;
+                    right: 2px;
+                    top: 8px;
+                    >button{
+                        border: none;
+                        background-color: transparent;
+                        cursor: pointer;
+                        outline: 0;
+                        position: relative;
+                        z-index: 1000;
+                        >svg{
+                            font-size: 1.7em;
+                            color: #54525a;
+                            transition: .5s;
+                        }
+                        &:hover > svg {
+                            color: $primary-color;
+                        }
+                    }
+                }
+                // Ocultar el boton editar del Homepage
+                &:first-child>div:first-child{
+                    display: none;
                 }
 
-                > div:last-child > p{
-                    text-indent: 1.3em;
-                    margin-bottom: 1em;
+                // Articulo -> page
+                >article{
+                    padding: 0 1.7em;
+
+                    >header:first-child{
+                        padding: 1.2em 0;
+                        display: flex;
+                        align-items: center;
+                        //Conten circulo & h1 title
+                        >div{
+                            position: relative;
+                            top: 2px;
+                            display: flex;
+                            align-items: center;
+                            >div:first-child{
+                                min-width: 32px;
+                                width: 32px;
+                                max-width: 32px;
+                                min-height: 32px;
+                                height: 32px;
+                                max-height: 32px;
+                                background-color: $primary-color;
+                                border-radius: 50%;
+                                margin: 0 .8em 0 0;
+                            }
+                            >h1 {
+                                font-size: 1.08555em;
+                                position: relative;
+                            }
+                        }
+                    }
+                    // Secciocon -- Contenidos del arcitulo
+                    > div:nth-child(2) p {
+                        font-size: .95em;
+                        line-height: 1.4em;
+                        text-indent: 2em;
+                    }
                 }
             }
         }
-
-        > div:first-child>div:first-child{
-            display: none;
-        }
-
     }
 }
+
+
 
 div#modal-create-page{
     @include propertyModal(10000);
@@ -226,4 +302,8 @@ div#modal-add-section {
         height: 78%;
         background-color: white;
     }
+}
+
+div#preload{
+    @include propertyModal(20000);
 }

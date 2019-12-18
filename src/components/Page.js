@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import MarkdownRenderer from 'react-markdown-renderer'
 
 class Page extends React.Component {
@@ -8,15 +8,13 @@ class Page extends React.Component {
         this.article = React.createRef()
     }
 
-    componentDidMount=()=>{
-        this.setFnLinks();
-    }
-    componentDidUpdate=()=>{
-        this.setFnLinks();
-    }
+    componentDidMount=()=>{ this.setFnLinks(); }
+    
+    componentDidUpdate=()=>{ this.setFnLinks(); }
+
     setFnLinks() {
         
-        let links = this.article.current.querySelectorAll('a'), // `.current` is the parameter that contain the article element
+        let links = this.article.current.querySelectorAll('a'),
             _this = this;
 
         for(var i in links) {
@@ -31,24 +29,24 @@ class Page extends React.Component {
     }
 
     render() {
-        // const markdown = `My favorite search engine is [Duck Duck Go](https://duckduckgo.com) Lorem, ipsum dolor [google](https://google.com) amet consectetur adipisicing elit. Eius molestias quod quisquam,  illum similique [wikipedia](https://wikipedia.com) saepe perspiciatis porro sed quo nostrum temporibus voluptas  rerum recusandae, soluta [asperiores](https://en.wiktionary.org/wiki/asperiores).`;
-        let data = this.props.data,
-            title = data.title,
-            address = data.address,
-            sections = data.sections;
-            
+        let data = this.props.data;
         return(
-            
             <article ref={this.article}>
-                <MarkdownRenderer markdown={title} />
-
-                {sections.map((section, key) => {
+                <header>
+                    <div>
+                        <div>
+                        </div>
+                        <h1>{data.title}</h1>
+                    </div>
+                </header>
+                {data.sections.map((section, key) => {
                     return(
-                        <article key={key} data-nsection={key}>
-                            
-
-                            <MarkdownRenderer markdown={section.content} />
-                        </article>
+                        <Fragment key={key}>
+                            <MarkdownRenderer 
+                                data-nsection={key}
+                                markdown={section.content}
+                            />
+                        </Fragment>
                     )
                 })}
             </article>
