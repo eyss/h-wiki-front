@@ -1,63 +1,112 @@
 div.preview-section{
     display: flex;
-    margin-bottom: 2em;
+    margin-bottom: 1em;
+    padding-top: 1em;
+    min-height: 75px;
     
     >div:first-child{
         width: 100%;
+        box-shadow: oPrimaryColor(.8) -2px 0px 0px inset;
+        background-color: #f5f5f5;
+        border-radius: .4em;
 
         // Contenedor de presentacion texto html
         >div:first-child{
             padding: 1em;
             box-sizing: border-box;
-            border: 1px solid #eee;
-            border-radius: .4em;
             font-size: 14px;
-        }
-        // Contenedor de botones edit & add section below
-        >div:last-child{
-            padding-top: .35555em;
-            >div {
-                >button {
-                    padding: .5em 0;
-                    width: 9.5em;
-                    border-radius: .3em;
-                    border: none;
-                    outline: 0;
-                    color: grey;
-                    box-shadow: rgba(93, 93, 93, 0.5) 1px 1px 1px;
-                    cursor: pointer;
-                    font-size: 12px;
-
-                    &:first-child{
-                        margin-right: 1em;
-                    }
-                    &:last-child{
-
-                    }
-                }
-            }
+            color: #707070;
         }
     }
+
     // Contenedor del boton para elminar la seccion
     > div:last-child{
-        width: 65px;
+        width: 60px;
+        min-width: 60px;
         display: flex;
         justify-content: center;
+        align-items: center;
         >div{
             position: relative;
-            >button {
-                font-size: 1.3em;
-                outline: 0;
-                border: none;
-                background-color: transparent;
-                color: tomato;
-                font-weight: bold;
-                cursor: pointer;
-                padding: .1em .3em;
-                border-radius: .3em;
+            
+            > ul {
+                > li {
+                    list-style: none;
+                    position: relative;
 
-                &:hover {
-                    background-color:rgba(255, 99, 71, 0.2);
+                    > button {
+                        justify-content: center;
+                        background-color: transparent;
+                        border: none;
+                        font-size: 1.5em;
+                        cursor: pointer;
+                        color: $primary-color;
+                        outline: 0;
+                        padding: .1em 0;
+
+                        transition-duration: .2s;
+                        border-radius: .3em;
+                        z-index: 0;
+
+                        &:hover{
+                            background-color: oPrimaryColor(.2);
+                        }
+                    }
+
+                    &:hover > ul { display: flex; }
+
+                    > ul {
+                        z-index: 1;
+                        background-color: #EBECF1;
+                        box-shadow: 0 0 3px 0 rgba(0,0,0,.08);
+                        border-radius: .5em;
+                        display: none;
+                        flex-direction: column;
+                        right: 0px;
+                        width: 150px;
+                        position: absolute;
+
+                        > li {
+                            width: 100%;
+                            list-style: none;
+
+                            >button {
+                                outline: 0;
+                                font-size: .8em;
+                                border: none;
+                                padding: 1em .2em;
+                                cursor: pointer;
+                                background-color: transparent;
+                                transition-duration: .3s;
+                                color: #636363;
+
+                                &:first-child{
+                                    border-top-left-radius: .5em;    
+                                    border-top-right-radius: .5em;    
+                                }
+                                &:last-child{
+                                    border-bottom-left-radius: .5em;    
+                                    border-bottom-right-radius: .5em;    
+                                }
+
+                                &:hover {
+                                    background-color: oPrimaryColor(.1);
+                                }
+
+                                > svg {
+                                    font-size: 1.6em;
+                                    // color: $primary-color;
+                                    padding: 0 .25em;
+                                }
+                            }
+                        }
+                    }
+
+                    button {
+                        width: 100%;
+                        display: flex;
+                        align-items: center;
+                    }
                 }
             }
         }

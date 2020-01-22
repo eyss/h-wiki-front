@@ -1,37 +1,79 @@
 import React from 'react';
-import '../styles/PreviewSection.scss';
 import MarkdownRenderer from 'react-markdown-renderer'
+import {MdMoreVert, MdCreate, MdClear, MdPlaylistAdd} from "react-icons/md"; 
 
 export default class PreviewSection extends React.Component {
+    // eslint-disable-next-line no-useless-constructor
     constructor(props) {
       super(props);
+      this.ps = React.createRef();
     }
 
-    openEditor = (e) => {
-      this.props.openEditor(this.props.pos, e.target.dataset.mode)
+    componentDidMount() {
+      this.ps.current
+      .addEventListener('click', (e)=>{
+        if (e.target.nodeName === 'A') {
+          e.preventDefault();
+        }
+      });
+    }
+
+    showEditor = (mode) => {
+      this.props.showEditor(mode, this.props.pos)
     }
 
     removeSection = () => {
-      this.props.removeSection(this.props.pos)
+      this.props.showConfirmation({
+        process: 'remove',
+        pos: this.props.pos
+      });
     }
 
     render() {
         return(
             <div className='preview-section'>
-                <div>
-                  <MarkdownRenderer markdown={this.props.content} />
-                  <div>
-                    <div>
-                      <button data-mode='edit' onClick={this.openEditor}>Edit</button>
-                      <button data-mode='addSB' onClick={this.openEditor}>Add section below</button>
-                    </div>
-                  </div>
-
+                <div ref={this.ps}>
+                  <MarkdownRenderer markdown={!this.props.element_content ? this.props.content : this.props.element_content } />
                 </div>
 
                 <div>
                   <div>
-                    <button onClick={this.removeSection}>X</button>
+                    <ul>
+                      <li>
+                          <button>
+                            <MdMoreVert />
+                          </button>
+                          <ul>
+                              <li>
+                                <button onClick={e => {this.showEditor('edit')}}>
+                                  <MdCreate /> Edit
+                                </button>
+                              </li>
+                              
+                              <li>
+                                <button onClick={this.removeSection}>
+                                  <MdClear /> Remove
+                                </button>
+                              </li>
+
+
+                              {this.props.pos === 0 &&
+                                <li>
+                                  <button>
+                                    <MdPlaylistAdd /> Add section above
+                                  </button>
+                                </li>
+                              }
+                                                            
+                              <li>
+                                <button onClick={e => {this.showEditor('addsb')}}>
+                                  <MdPlaylistAdd /> Add section below
+                                </button>
+                              </li>
+                            
+                          </ul>
+                      </li>
+                    </ul>
                   </div>
                 </div>
                 

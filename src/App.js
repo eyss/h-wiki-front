@@ -1,131 +1,226 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import Page from './components/Page';
 import { connect } from '@holochain/hc-web-client';
 import './styles/App.scss';
 import Editor from './components/Editor';
 import PreviewSection from './components/PreviewSection';
-import { MdCreate } from "react-icons/md";
+import { MdCreate, MdAdd } from "react-icons/md";
 
-//ParentA component
+/** Apollo cliente, GraphQL */
+import { ApolloClient, InMemoryCache, gql } from "apollo-boost";
+import { resolvers } from "./graphql/resolvers";
+import { typeDefs } from "./graphql/schema";
+import { SchemaLink } from "apollo-link-schema";
+import { makeExecutableSchema } from "graphql-tools";
+
+
 class App extends React.Component {
 
   constructor(props) {
       super(props);
+
       this.state = {
-        currentURLParemter: [],
-        parameters: [],
-        titles: [],
-        contents: [],
-        hash: '',
-        titlenp : '',
-        contentsnp: [],
-        editorParam: [{
-          pos: 1,
-          mode: 'undefined'
-        }],
-        renderedPages: [],
-        links: [],
-        addresses: [],
-
-
-
-        existingPages: [], //array de json { title:, address, }
-        pages: [], // array de json {title:, address:, sections: [{content:, address:,} ...]}
+        existingPages: [],
+        pages: [],
         newData: {
           title: '',
           sections: [
           ]
         },
-        mPreload: '',
+        statusPreload: '',
+        pageData: {
+          title: '',
+          sections: [],
+          position: undefined
+        },
+        existingPage: false,
+        editorSettings: [],
+        pageDataProcess: {},
+        previewData: {},
+        clearingCache: false,
+
+        //Variables booleanas para mostrar contenido
+        showPageManager: false, 
+        showEditor: false,
+        alert: false,
+        confirmation: false,
+        confirmationMsg: 'equis',
+        preloader: false,
+        loadingPage: true,
 
       };
+
+      this.pagesContainer = React.createRef();
   }
 
   componentDidMount() {
-    // var _this = this;
-    // connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
-    //     callZome('wiki', 'wiki', 'get_pages_address') ({})
-    //     .then( addresses => {
-    //       addresses = JSON.parse(addresses);
-    //       addresses = addresses.Ok;
-    //       this.setState({
-    //         addresses : addresses
-    //       }, ()=>{
-    //         console.log(_this.state.addresses);
-
-    //         _this._initRenderig();
-    //       });
-    //     })
-    // })
-
-    connect({ url: "ws://192.168.1.63:8885" })
-      .then(({callZome, close}) => {
-        callZome('wiki', 'wiki', 'get_home_page') ({})
-        .then( res => {
-          console.log(res)
-        })
-    })
-  }
-
-  _initRenderig() {
-    if (!this.state.addresses.length) {
-
-      var contentLinks = this.state.links,
-          arrLinks = [];
-          
-      for(var i in contentLinks) {
-        arrLinks[i] = `* [${contentLinks[i].content}](${contentLinks[i].href})\n`;
-      }
-
-      var page = {
-        title: 'Welcome Visitors',
-        sections: [{
-          // content: arrLinks.join(' '),
-          content: 'Lorem ipsum dolor sit amet consectetur, adipisicing elit. Illum architecto ullam itaque laboriosam voluptatibus nam fugit asperiores, aut laudantium rerum! Quibusdam ipsa illum ullam dicta rem tenetur temporibus nam sed.',
-          address: undefined
-        }],
-      };
-
-      this.setState({
-        pages: [page, page]
+    connect({ url: "ws://192.168.1.63:3400" })
+    .then((context) => {
+      const schema = makeExecutableSchema({
+        typeDefs,
+        resolvers
+      });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new SchemaLink({ schema, context })
       })
-
-    } else {
-      var _this = this;
-      connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
-        callZome('wiki', 'wiki', 'get_all') ({
-          address:  this.state.addresses[0]
+      this.setState({ client: client });
+      client
+        .query({
+          query: gql`
+            {
+              homePage {
+                title
+                sections {
+                  content
+                }
+              }
+            }
+          `
         })
-        .then( pageData => {
-          pageData = JSON.parse(pageData);
-          pageData = pageData.Ok;
-          console.log(pageData);
-          var link = {};
-          link.content = pageData.page.titulo;
-          link.href = pageData.page_name;
-        
-          var links = this.state.links;
-          links[links.length] = link;
-          this.setState({
-            links : links,
-            addresses: this.state.addresses.splice(1, this.state.addresses.length)
-          }, () => {
-            _this._initRenderig();
-          });
-        });
+        .then(e =>{
+          let homePage = e.data.homePage;
+
+          if (!homePage.sections[0].content.length) {
+            homePage.sections[0].content = 'This is the page of H-wiki';
+            homePage.noLinks = true;
+          }     
+
+          this.setState({ pages: [homePage], loadingPage: false })
+        })
+        .catch(e => console.log("object", e));
     });
-    }
   }
     
-  handleToUpdate(e){
+  showPage(e){
     e.preventDefault();
+    this.setState({loadingPage: true})
+    this.state.client
+    .query({
+      query: gql`
+        {
+          page(title:"${e.target.textContent}") {
+            title
+            sections {
+              id
+              type
+              content
+              rendered_content
+            }
+          }
+        }
+      `
+    })
+    .then(page => {
+      page = page.data.page;
+      var pages = this.state.pages;
+      pages.splice(this.getPagePositionPage(e) + 1, pages.length);
+      pages = [...pages, page];
+      this.setState({
+        pages,
+        loadingPage: false
+      }, (_this=this) => {
+        _this.pagesContainer.current.scrollTo(window.innerWidth, 0);
+      });
+    });
+  }
+
+  storePage = () => {
+    this.state.client
+      .mutate({
+        mutation: gql`
+          mutation CreatePageWithSections(
+            $title: String!
+            $sections: [SectionInput!]!
+          ) {
+            createPageWithSections(title: $title, sections: $sections) {
+              title
+              sections {
+                id
+                type
+                content
+                rendered_content
+              }
+            }
+          }
+        `,
+        variables: { title: this.state.pageData.title, sections: this.state.pageData.sections }
+      })
+      .then(e => {
+        var pages = this.stateAssignment(this.state.pages),
+            newLink = {content: "["+ this.state.pageData.title +"](#)", __typename: "Section"};
+
+        if (this.state.pages[0].noLinks) {
+          pages[0].sections = [newLink];
+          pages[0].noLinks = false;
+        } else {
+          pages[0].sections.push(newLink);
+        }
+
+        this.setState({
+          pages
+        }, (_this=this)=>{
+          _this.closePageManager();
+        });
+        
+      });
+  }
+
+  showEditor = (mode, pos = undefined) => { 
+    this.setState({
+      editorSettings: [{
+        mode: mode,
+        pos: pos
+      }]
+    }, (_this=this)=>{
+      _this.setState({ showEditor: true })
+    });
+  }
+
+  closeEditor(mode = undefined){
+    this.setState({
+      editorSettings: []
+    }, (_this=this)=>{
+      _this.setState({
+        showEditor: false,
+      })
+    });
+  }
+
+  showPageManager = () => { this.setState({ showPageManager: true }); }
+  closePageManager = () => { this.setState({ showPageManager: false }); }
+
+  createPage = () =>{
+    this.setState({
+      pageData: {
+        title: '',
+        sections: [],
+        position: undefined
+      },
+      existingPage: false,
+    }, (_this=this)=> {
+      _this.showPageManager();
+    });
+  }
+
+  showPageData = (pos) => {
+    var currentPage = this.stateAssignment(this.state.pages[pos]);
+    currentPage.position = pos;
+
+    this.setState({
+      pageData: currentPage,
+      existingPage: true
+    }, (_this=this)=> {
+      _this.showPageManager();
+    });
+  }
+
+  getPagePositionPage = (e)=> {
     let el = e.target,
-        link = el.href.split('/'),
-        address = link[link.length-1],
-        cont = 2,
         parent = el.parentNode,
+        cont = 2,
         pos;
-   
+
     for (var i = 0; i<cont; i++) {
       if (parent.dataset.page) {
         pos = parent.dataset.page;
@@ -133,177 +228,253 @@ class App extends React.Component {
       } 
       parent = parent.parentNode;
       cont+=1;
-    } 
+    }
+    return parseInt(pos);
+  }
 
-    var currentPages = this.state.pages;
-    currentPages.splice((parseInt(pos)+1), currentPages.length-1);
+  updatePageTitle = (e)=> {
+      let pageData = this.state.pageData;
+      pageData.title = e.target.value;
+      this.setState({ pageData: {...pageData} });
+  }
 
-    connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
-        callZome('wiki', 'wiki', 'get_all') ({
-          address: address
+  getContentSection = (pos) =>{
+    return this.state.pageData.sections[pos];
+  }
+
+  stateAssignment(state){
+    var newState = JSON.stringify(state);
+    return JSON.parse(newState);
+  }
+
+  async updatePageSections(mode, pos, content, currentSection) {
+    let state = {},
+        section = {
+          type: 'text',
+          content: content,
+          rendered_content: 'text/html'
+        },
+        pageData = this.stateAssignment(this.state.pageData),
+        secitonUpdated;
+    
+    if (this.state.existingPage) {
+
+      if (mode === 'addns') {
+
+        await this.state.client
+        .mutate({
+          mutation: gql`
+            mutation addSectionToPage(
+              $title: String!
+              $section: SectionInput!
+            ) {
+              addSectionToPage(title: $title, section: $section) {
+                title
+                sections {
+                  id
+                  type
+                  content
+                  rendered_content
+                }
+              }
+            }
+          `,
+          variables: {title: pageData.title, section: section}
         })
-        .then( page => {
-          page = JSON.parse(page);
-          console.log(page)
-          page = page.Ok;
+        .then(res => {
+          var updatedPage = res.data.addSectionToPage;
+          console.log('Updated page for addSectionToPage : ', updatedPage);
+        });
 
-          
+      } else if (mode === 'addsb') {
+        
+        await this.state.client
+        .mutate({
+          mutation: gql`
+            mutation addOrderedSectionToPage(
+              $beforeSection: ID!
+              $section: SectionInput!
+            ) {
+              addOrderedSectionToPage(beforeSection: $beforeSection, section: $section) {
+                title
+                sections {
+                  id
+                  type
+                  content
+                  rendered_content
+                }
+              }
+            }
+          `,
+          variables: {beforeSection: pageData.sections[pos].id, section: section}
+        })
+        .then(res => {
+          var updatedPage = res.data;
+          console.log('Updated page for addOrderedSectionToPage : ', updatedPage);
 
-          var data = {
-            title: page.page.titulo,
-            address: page.page_name,
-            sections: []
+        });
+
+      } else if (mode === 'edit') {
+
+        await this.state.client
+        .mutate({
+          mutation: gql`
+            mutation UpdateSection(
+              $id: ID!
+              $section: SectionInput!
+            ) {
+              updateSection(id: $id, section: $section) {
+                  id
+                  typeupdatePageSections
+                  content
+                  rendered_content
+              }
+            }
+          `,
+          variables: { id: currentSection.id, section: {
+            type: currentSection.type,
+            content,
+            rendered_content: currentSection.rendered_content
+          }}
+        })
+        .then(res => {
+          secitonUpdated = res.data.updateSection;
+          pageData.sections.splice(pos, 1, secitonUpdated);
+
+          let pages = this.stateAssignment(this.state.pages);
+          pages.splice(pageData.position, 1, pageData);
+
+          state = {
+            pageData,
+            pages
           };
-          var cSections = page.redered_page_element;
 
-          for(var j in cSections) {
-            data.sections[j] = {};
-            data.sections[j].content = cSections[j].element_content;
-            data.sections[j].render = cSections[j].element_content;
-            data.sections[j].address = page.vector_address[j]
+        });
+
+      }
+
+    } else {
+
+      if (mode === 'addns') {
+        
+        pageData.sections.push(section);
+        state = {pageData};
+
+      } else if (mode === 'addsb') {
+        
+        pageData.sections.splice((pos+1), 0, section);
+        state = {pageData};
+
+      } else if (mode === 'edit') {
+
+        secitonUpdated = currentSection;
+        secitonUpdated.content = content;
+        pageData.sections.splice(pos, 1, secitonUpdated);
+
+        state = { pageData };
+      }
+
+    }
+
+    this.setState(state, (_this=this)=>{
+      _this.closeEditor(mode);
+    });
+
+  }
+
+  async removeSection(pos) {
+    var pageData = this.stateAssignment(this.state.pageData),
+        pages = this.stateAssignment(this.state.pages),
+        state;
+
+    if (this.state.existingPage) {
+      await this.state.client
+      .mutate({
+        mutation: gql`
+          mutation removeSection(
+            $id: ID!
+          ) {
+            removeSection(id: $id) {
+              title
+              sections{
+                id
+                type
+                content
+                rendered_content
+              }
+            }
           }
-          
-          var renderedPages = [data];
-          // console.log(renderedPages)
-          var updatedPages = [...currentPages, <Page handleToUpdate = {this.handleToUpdate.bind(this)} data = {data} />]
-          this.setState({
-            pages: updatedPages,
-            renderedPages: [...this.state.renderedPages, renderedPages]
-          })
-        })
+        `,
+        variables: { id: pageData.sections[pos].id}
+      })
+      .then(res => {
+
+        pageData.sections.splice(pos, 1);
+        pages.splice(pageData.position, 1, pageData);
+
+        state = {
+          pageData,
+          pages
+        };
+
+      });
+    } else {
+      pageData.sections.splice(pos, 1);
+      state = {
+        pageData
+      };
+    }
+
+    this.setState(state, (_this=this)=>{
+      var _state = {alert: false};
+      if (_this.state.existingPage) {
+        _state.preloader = false;
+      }
+      _this.setState(_state);
     });
   }
 
-  closeModal = () => {    
-    document
-      .querySelector('#modal-create-page')
-        .style.display = 'none';
+  showConfirmation(pageDataProcess) {
+    this.setState({
+      alert: true,
+      confirmation: true,
+      confirmationMsg: 'Are you sure you want to '+ pageDataProcess.process +' this?',
+      pageDataProcess
+    });
   }
 
-  showModal = () => {    
-    document
-      .querySelector('#modal-create-page')
-        .style.display = 'flex';
-  }
-
-  showEditorModal = () => {    
-    document
-      .querySelector('#modal-add-section')
-        .style.display = 'flex';
-  }
-
-  updateTitle = (e)=> {
-    this.setState({ titlenp: e.target.value });
-  }
-
-  getContentSection(pos=null, mode = null) {
-    var content = '';
-    if (pos === 0 || pos && mode.toString() === 'edit'){
-      if(pos !== undefined) {
-        pos = parseInt(pos);
-        var element = this.state.contentsnp[pos];
-        if (element !== undefined) {
-          content = element.element_content;
-        }
+  processPageData = () =>{
+    this.setState({
+      confirmation: false,
+      preload: true,
+      
+    },(_this=this, pageDataProcess = this.state.pageDataProcess)=>{
+      if (pageDataProcess.process === 'update') {
+        _this.updatePageSections(
+          pageDataProcess.mode,
+          pageDataProcess.pos,
+          pageDataProcess.content,
+          pageDataProcess.currentSection
+        );
+      } else if (pageDataProcess.process === 'remove') {
+        _this.removeSection(pageDataProcess.pos);
       }
-    }
-    return content;
+    });
   }
 
-  openEditor = (pos = null, mode) => {
-    let options = [{
-      pos: pos,
-      mode: mode
-    }];
-
+  closeConfirmation = () => {
     this.setState({
-      editorParam: options
-    }, function(){
-      document
-        .querySelector('#modal-add-section')
-          .style.display = 'flex';
-    })
+      alert:false,
+      confirmation:false,
+      pageDataProcess: {}
+    });
   }
 
-  updateSectionPage(pos, content, mode = null) {
-
-    var section = {
-      parent_page_anchor: "",
-      element_type: "text",
-      element_content: content.markdown,
-      render: content.markdown
-    },
-    contentsnp = this.state.contentsnp,
-    _this = this,
-    pEnd;
-
-    if (mode === 'addSB' || mode === 'add') {
-      pos = mode === 'add' ? contentsnp.length : (parseInt(pos)+1);
-      pEnd=0;
-    } else if (mode === 'edit') {
-      pEnd=1;
-    }
-    contentsnp.splice(pos, pEnd, section);
+  closePreloader = () => {
     this.setState({
-      contentsnp: []
-    }, function() {
-      _this.setState({
-        contentsnp: contentsnp
-      }, function(){
-        document
-          .querySelector('#modal-add-section')
-            .style.display = 'none';
-      })
-    })
-    console.log(mode);
-  }
-
-  removeSection = (pos) => {
-    var sections = this.state.contentsnp,
-        _this = this;
-
-    pos = parseInt(pos);
-    
-    sections.splice(pos, 1)
-    
-    this.setState({
-      contentsnp: []
-    }, function(){
-      _this.setState({
-        contentsnp: sections
-      })
-    })
-  }
-
-  storePage = () => {
-    var _this = this;
-    connect({ url: "ws://192.168.1.63:8800" }).then(({callZome, close}) => {
-        callZome('wiki', 'wiki', 'create_page_with_elements') ({
-          titulo: _this.state.titlenp,
-          contents: _this.state.contentsnp
-        })
-        .then( r => {
-          console.log(r)
-          _this.setState({
-            titlenp: '',
-            contentsnp: []
-          }, () => {
-            _this.closeModal();
-          });
-        })
-    })
-  }
-
-  showPageRendered = (e) => {
-    var pos = (parseInt(e.target.dataset.posSect)-1);
-    var page = this.state.renderedPages[pos][0];
-    var _this = this;
-    this.setState({
-      titlenp: page.title,
-      contentsnp: page.sections, 
-    }, () => {
-      _this.showModal();
-    })
+      alert:false,
+      preloader:false,
+    });
   }
 
   render() {
@@ -311,138 +482,137 @@ class App extends React.Component {
       <div id='container'>
 
         <header>
+          <div><div></div></div>
+
           <div>
+            <button onClick={this.createPage}>Create page</button>
+          </div>
+
+          {this.state.loadingPage &&
+            <div className='linear-preloader'>
               <div></div>
-          </div>
-          <div>
-            <button onClick={this.showModal}>Create page</button>
-          </div>
+            </div>
+          }
         </header>
 
-        <section>
+        <section ref={this.pagesContainer}>
           <div>
-            {
-              this.state.pages.map((dataPage, key) => {
+            {this.state.pages.map((pageData, key) => {
                 return (
-                  <div key={key}>
+                  <div key={key} data-page={key}>
                     <div>
-                      <button data-pos-sect={key}>
+                      {key !== 0 && <button onClick={e =>{this.showPageData(key)}}>
                         <MdCreate />
-                      </button>
+                      </button>}
                     </div>
-                    <Page data={dataPage} handleToUpdate = {this.handleToUpdate.bind(this)}  />
+                    <Page data={pageData} showPage = {this.showPage.bind(this)}  />
                   </div>
-                )
-              })
-            }
-          </div>
-        </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <div id='modal-create-page'>
-          <div>
-
-            <header>
-              <label>Create page</label>
-            </header>
-
-            <section>
-              <div>
-                <input 
-                  type='text'
-                  value={this.state.titlenp}
-                  onChange={this.updateTitle} 
-                  placeholder='Page title'
-                />
-              </div>
-
-              <div>
-              
-                {this.state.contentsnp.map((data, key) => {
-                  return(
-                    <PreviewSection 
-                      key = {key}
-                      pos = {key}
-                      content = {data.render}
-                      openEditor = {this.openEditor.bind(this)}
-                      removeSection = {this.removeSection.bind(this)}
-                      //funcion para elinminar
-                      //funcion para editar
-                      //funcion para 
-                    />
-                  )
-                })}
-
-              </div>
-            </section>
-
-            <footer>
-
-              <div>
-                <div>
-                  <button onClick={e=>{this.openEditor(null, 'add')}}>Add new section</button>
-                  <button>Delete page</button>
-
-                </div>
-              </div>
-
-              <div>
-                <div>
-                  <button onClick={this.closeModal}>Cancel</button>
-                  <button onClick={this.storePage}>Save</button>
-                </div>
-              </div>
-
-            </footer>
-          </div>
-        </div>
-
-        <div id='modal-add-section'>
-          <div>
-              {this.state.editorParam.map((param, key) => {
-                return(
-                  <Editor
-                    key = {key}
-                    pos = {param.pos}
-                    mode = {param.mode}
-                    getContentSection = {this.getContentSection.bind(this)}
-                    updateSectionPage = {this.updateSectionPage.bind(this)}
-                  />
                 )
               })}
           </div>
-        </div>
+          {this.state.loadingPage && <div className='blocker'></div>}
+        </section>
 
-        <div id='preload'>
+        {this.state.showPageManager &&
+          <div id='page-manager'>
             <div>
-              <label>{this.state.mPreload}</label>
-            </div>
-        </div>
+              <header>
+                <label>
+                  { this.state.existingPage ? this.state.pageData.title : 'Create page' }
+                </label>
+              </header>
+              <section>
+                {!this.state.existingPage &&
+                  <div>
+                    <input 
+                      type='text'
+                      value={this.state.pageData.title}
+                      onChange={this.updatePageTitle}
+                      placeholder='Page title'
+                      className={this.state.existingPage ? 'readonly' : ''}
+                    />
+                  </div>
+                }
+                <div>
 
+                  {!this.state.pageData.sections.length &&
+                    <button onClick={e=>{this.showEditor('addns')}}>
+                      <MdAdd />Add section
+                    </button>
+                  }
+
+                  {this.state.pageData.sections.map((data, key) => {
+                    return(
+                      <PreviewSection 
+                        key = {key}
+                        pos = {key}
+                        content = {data.content}
+                        showEditor = {this.showEditor.bind(this)}
+                        removeSection = {this.removeSection.bind(this)}
+                        showConfirmation={this.showConfirmation.bind(this)}
+                      />
+                    )
+                  })}
+
+                </div>
+              </section>
+              <footer>
+                <div>
+                  <div>
+                    <button onClick={this.closePageManager}>Cancel</button>
+                    <button onClick={this.storePage}>{this.state.existingPage ? 'Update' : 'Save' }</button>
+                  </div>
+                </div>
+              </footer>
+            </div>
+          </div>
+        }
+
+        {this.state.showEditor &&
+          this.state.editorSettings.map((param, key) => {
+            return(
+              <Editor
+                key = {key}
+                pos = {param.pos}
+                mode = {param.mode}
+                getContentSection = {this.getContentSection.bind(this)}
+                updatePageSections = {this.updatePageSections.bind(this)}
+                closeEditor = {this.closeEditor.bind(this)}
+                showConfirmation={this.showConfirmation.bind(this)}
+              />
+            )
+          })
+        }
+        
+        {this.state.alert &&
+          <div id='alert'>
+            {this.state.confirmation &&
+              <div className='confirmation'>
+                <div>
+                  <label>{this.state.confirmationMsg}</label>
+                </div>
+                <div>
+                  <button onClick={this.closeConfirmation}>No</button>
+                  <button onClick={this.processPageData}>Yes</button>
+                </div>
+              </div>
+            }
+
+            {this.state.preloader &&
+              <div className='preloader'>
+                <div>
+                  <label>Updating record</label>
+                </div>  
+                <div>
+                  <label>loading ...</label>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
     )
   }
 }
-
 
 export default App;

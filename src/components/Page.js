@@ -1,11 +1,12 @@
 import React, { Fragment } from 'react';
 import MarkdownRenderer from 'react-markdown-renderer'
+import getEventListeners from 'geteventlisteners';
 
 class Page extends React.Component {
 
     constructor(props){
         super(props);
-        this.article = React.createRef()
+        this.article = React.createRef();
     }
 
     componentDidMount=()=>{ this.setFnLinks(); }
@@ -18,11 +19,11 @@ class Page extends React.Component {
             _this = this;
 
         for(var i in links) {
-            if (links[i].tagName === 'A') {
+            if (links[i].tagName === 'A' && links[i].getEventListeners('click') === undefined) {
                 links[i]
-                .addEventListener('click', function(e) {
+                .addEventListener('click', (e) =>{
                     e.preventDefault();
-                    _this.props.handleToUpdate(e);
+                    _this.props.showPage(e);
                 });
             }
         }

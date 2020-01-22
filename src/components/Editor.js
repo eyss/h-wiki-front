@@ -1,54 +1,81 @@
-import React from 'react'
-import MdEditor from 'react-markdown-editor-lite'
+import React from 'react';
+import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
-import '../styles/Editor.scss';
 
 export default class Editor extends React.Component {
-  mdEditor = null
-  mdParser = null
+  mdEditor = null;
+  mdParser = null;
+  content = '';
   constructor(props) {
-    super(props)
-    this.mdParser = new MarkdownIt()
-
-    this.content = '';
+    super(props);
+    this.mdParser = new MarkdownIt();
+    this.editor = React.createRef();
+  }
+  
+  componentDidMount() {
+    this.editor.current
+    .addEventListener('click', (e)=>{
+      if (e.target.nodeName === 'A') {
+        e.preventDefault();
+      }
+    });
   }
 
-  updateSectionPage = () => {   
-    this.props.updateSectionPage(
-      this.props.pos, 
-      {
-        markdown: this.mdEditor.getMdValue(),
-        html: this.mdEditor.getHtmlValue()
-      },
-      this.props.mode);
+  updatePageSections = () => {
+    if (this.props.mode === 'edit') {
+      this.props.showConfirmation({
+        process: 'update',
+        pos: this.props.pos,
+        mode: this.props.mode,
+        content: this.mdEditor.getMdValue(),
+        currentSection: this.props.getContentSection(this.props.pos, this.props.mode)
+      });
+    } else {
+      this.props.updatePageSections(
+        this.props.mode,
+        this.props.pos,
+        this.mdEditor.getMdValue(),
+        this.props.getContentSection(this.props.pos, this.props.mode)
+      );
+    }
   }
-
-  closeModal = () => {    
-    document
-      .querySelector('#modal-add-section')
-        .style.display = 'none';
+  
+  close = () => {    
+    this.props.closeEditor();
   }
 
   render() {
-    return (      
-      <div id="rmel-container">
-        <header>
-          <label>MdEditor</label>
-        </header>
+    
+    var content = '', txtBtn = 'Save';
+    if (this.props.mode === 'edit') {
+      content = this.props.getContentSection(this.props.pos, this.props.mode).content;
+      txtBtn = 'Update';
+    }
+
+    return (
+      <div id='editor'>
         <div>
-          <MdEditor
-            ref={node => this.mdEditor = node}  
-            value={this.props.getContentSection(this.props.pos, this.props.mode)}
-            renderHTML={(text) => this.mdParser.render(text)}
-          />
-        </div>
-        <footer>
-          <div>
-            <button onClick={this.closeModal}>Cancel</button>
-            <button onClick={this.updateSectionPage}>Add</button>
+          <div id="rmel-container">
+            <header>
+              <label>Markdown editor</label>
+            </header>
+            <div ref={this.editor}>
+              <MdEditor
+                ref={node => this.mdEditor = node}  
+                value={content}
+                renderHTML={(text) => this.mdParser.render(text)}
+              />
+            </div>
+            <footer>
+              <div>
+                <button onClick={this.close}>Cancel</button>
+                <button onClick={this.updatePageSections}>{txtBtn}</button>
+              </div>
+            </footer>
           </div>
-        </footer>               
+        </div>
       </div>
+        
     )
   }
 }

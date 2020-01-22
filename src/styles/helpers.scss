@@ -1,0 +1,152 @@
+$primary-color: #4baf81;
+$bg1 : #F0F1F4;
+$bg2 : #FAFAFA;
+
+@function oPrimaryColor($opacity) {
+    @return rgba(75,175,129, $opacity);
+}
+
+*{ margin: 0; padding: 0; }
+
+textarea::-webkit-scrollbar,
+div::-webkit-scrollbar{ width: 8px; height: 13px; }
+textarea::-webkit-scrollbar-track,
+div::-webkit-scrollbar-track{ background: #f5f5f5; border-radius: 2em; }
+textarea::-webkit-scrollbar-thumb,
+div::-webkit-scrollbar-thumb{ background: #cccccc; border-radius: 2em; }
+
+input.readonly{ pointer-events: none; }
+
+@mixin modalPropertys($zindex) {
+    background-color: oPrimaryColor(0.6);
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: $zindex;
+}
+
+@mixin buttonPropertys($style, $width : null, $height: null) {
+    background-color: $primary-color;
+    border: none;
+    padding: .3em 0;
+    border-radius: .3em;
+    outline: 0;
+    cursor: pointer;
+
+    @if ($width != null){ width: $width; } @else { width: auto;  };
+    @if ($height != null){ height: $height; } @else { height: auto;  };
+
+    @if $style == 'normal' {
+        background-color: $primary-color;
+        color: #FFFFFF;
+    } @else if $style == 'contoured' {
+        border: $primary-color 1px solid;
+        background-color: transparent;
+        color: $primary-color;
+    }
+}
+
+// Preloader animation
+
+div.linear-preloader {
+    display: block;
+    top:100%;
+    width: 100%;
+    background-color: oPrimaryColor(.3);
+    border-radius: 2px;
+
+    >div {
+        background-color: $primary-color;
+
+        &:before {
+            content: '';
+            position: absolute;
+            background-color: inherit;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            will-change: left, right;
+            -webkit-animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+            animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        }
+        
+        &:after {
+            content: '';
+            position: absolute;
+            background-color: inherit;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            will-change: left, right;
+            -webkit-animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+            animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+            -webkit-animation-delay: 1.15s;
+            animation-delay: 1.15s
+        }
+    }
+}
+
+@-webkit-keyframes indeterminate {
+	0% {
+		left: -35%;
+		right: 100%
+	}
+	60% {
+		left: 100%;
+		right: -90%
+	}
+	100% {
+		left: 100%;
+		right: -90%
+	}
+}
+
+@keyframes indeterminate {
+	0% {
+		left: -35%;
+		right: 100%
+	}
+	60% {
+		left: 100%;
+		right: -90%
+	}
+	100% {
+		left: 100%;
+		right: -90%
+	}
+}
+
+@-webkit-keyframes indeterminate-short {
+	0% {
+		left: -200%;
+		right: 100%
+	}
+	60% {
+		left: 107%;
+		right: -8%
+	}
+	100% {
+		left: 107%;
+		right: -8%
+	}
+}
+
+@keyframes indeterminate-short {
+	0% {
+		left: -200%;
+		right: 100%
+	}
+	60% {
+		left: 107%;
+		right: -8%
+	}
+	100% {
+		left: 107%;
+		right: -8%
+	}
+}

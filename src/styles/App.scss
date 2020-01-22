@@ -1,35 +1,6 @@
-$primary-color: #0E37FF;
-
-@function oPrimaryColor($opacity) {
-    @return rgba(14,55,255, $opacity);
-}
-
-@mixin propertyModal($zindex) {
-    background-color: oPrimaryColor(0.6);
-    width: 100vw;
-    height: 100vh;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: $zindex;
-    display: none;
-}
-
-@mixin styleButtonBottomModal($width) {
-    background-color: #ddd;
-    border: none;
-    padding: .3em 0;
-    color: rgb(122, 122, 122);
-    border-radius: .3em;
-    outline: 0;
-    cursor: pointer;
-    width: $width;
-}
-
-*{ margin: 0px; }
+@import './helpers.scss';
+@import './Editor.scss';
+@import './PreviewSection.scss';
 
 div#container{
     display: flex;
@@ -37,15 +8,18 @@ div#container{
     height: 100vh;
     width: 100vw;
     background-color: white;
+    overflow: hidden;
     
     > header{
-        height: 6vh;
+        height: 7vh;
         width: 100%;
         display: flex;
-        background-color: $primary-color;
-        z-index: 25000;
+        background-color: #EBECF1;//$primary-color;
+        box-shadow: rgba(128,128,128, .2) 0px 10px 10px;
+        position: relative;
+        z-index: 10000;
 
-        > div {
+        > div:first-child, > div:nth-child(2) {
             width: 50%;
             height: 100%;
             display: flex;
@@ -56,52 +30,43 @@ div#container{
             > div {
                 height: 6vh;
                 width: 10vw;
-                background-image: url('/LogoH-wik-3.png');
+                background-image: url('/LogoH-wik-8.png');
+
                 background-position: center;
-                background-size:55%;
+                background-size:63%;
                 background-repeat: no-repeat;
             }
         }
 
-        > div:last-child {
-            align-items: flex-end;
+        > div:nth-child(2) {
+            align-items: center;
             justify-content: flex-end;
+            > button {
+                @include buttonPropertys('normal', 130px, 33px);
+                margin-right: 2em;
+                transition-duration: .5s;
+                font-size: 14px;
+                &:hover{
+                    background-color: oPrimaryColor(.8);
+                }
+            }
         }
 
-        > div:last-child > button {
-            margin-right: 2em;
-            margin-bottom: .5em;
-            padding: .5em .8em;
-            cursor: pointer;
-            background-color: transparent;
-            border: none;
-            padding: .3em 0;
-            width: 100px;
-            color: white;
-            border-radius: .3em;
-            outline: 0;
-            box-shadow: white 1px 1px 1px inset, white -1px -1px 1px inset;
-            transition: .5s;
-            &:hover{
-                background-color: #0E37FF;
-                color: white;
-            }
+        > div:last-child.linear-preloader {
+            position: absolute;
+            left: 0;
+            height: 3px;
         }
     }
 
     > section{
        width: inherit;
-       height: 94vh;
+       height: 93vh;
 
        overflow-x: auto;
        overflow-y: hidden;
-
-       &::-webkit-scrollbar {
-            width: 100%;
-            height: 10px;
-       }
-       &::-webkit-scrollbar-track { background: #f5f5f5; }
-       &::-webkit-scrollbar-thumb { background: #cccccc; }
+       background-color: #F0F1F4;
+       position: relative;
 
        > div{
            height: 100%;
@@ -109,19 +74,18 @@ div#container{
            flex-wrap: nowrap;
             
             > div {
-                margin: 15px 15px;
+                margin: 25px 15px 15px;
                 min-width: 470px!important;
                 width: 470px!important;
                 max-width: 470px!important;
                 position: relative;
-
-                box-shadow: rgba(0,0,0,.1) 1px 1px 2px, rgba(0,0,0,.2) -1px -1px 15px;
-
-                overflow-x:hidden;
+                background-color: #FAFAFA;
+                border-radius: .4em;
+                // box-shadow: #EBECF1 1px 1px 0px, #EBECF1 -1px -1px 0;
+                border: 1px solid #EBECF1;
+                box-sizing: border-box;
+                overflow-x: hidden;
                 overflow-y: scroll;
-                &::-webkit-scrollbar { width: 8px; }
-                &::-webkit-scrollbar-track { background: #f5f5f5; }
-                &::-webkit-scrollbar-thumb { background: #cccccc; }
 
                 //Contenedor del boton editar
                 >div:first-child {
@@ -146,9 +110,7 @@ div#container{
                     }
                 }
                 // Ocultar el boton editar del Homepage
-                &:first-child>div:first-child{
-                    display: none;
-                }
+                &:first-child>div:first-child{ display: none; }
 
                 // Articulo -> page
                 >article{
@@ -171,7 +133,7 @@ div#container{
                                 min-height: 32px;
                                 height: 32px;
                                 max-height: 32px;
-                                background-color: $primary-color;
+                                background-color: oPrimaryColor(0.75);
                                 border-radius: 50%;
                                 margin: 0 .8em 0 0;
                             }
@@ -182,38 +144,63 @@ div#container{
                         }
                     }
                     // Secciocon -- Contenidos del arcitulo
-                    > div:nth-child(2) p {
-                        font-size: .95em;
-                        line-height: 1.4em;
-                        text-indent: 2em;
+                    > div{
+                        margin-bottom: .9em;
+
+                        > h1:first-child, 
+                        > h2:first-child,
+                        > h3:first-child,  
+                        > h4:first-child, 
+                        > h5:first-child,
+                        > h6:first-child{ 
+                            margin-bottom: .485em;
+                            font-size: 1em;
+                         }
+
+                        p {
+                            font-size: .95em;
+                            line-height: 1.4em;
+                            text-indent: 2em;
+                            margin-bottom: .5em;
+                        }
                     }
                 }
             }
+        }
+
+        >div.blocker{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            cursor: wait;
         }
     }
 }
 
 
 
-div#modal-create-page{
-    @include propertyModal(10000);
-    
+div#page-manager{
+    @include modalPropertys(15000);
     > div {
-        width: 60%;
-        height: 85%;
-        background-color: white;
+        width: 65%;
+        height: 90%;
+        background-color: $bg2;
         display: flex;
         flex-direction: column;
+        border-radius: .5em;
     
         > header {
-            height: 25px;
-            border-top: 1px solid #ddd;
-            background: #f1f1f1;
+            height: 68px;
             display: flex;
             align-items: center;
+            border-bottom: #EBECF1 1px solid;
+            
             >label {
                 color: rgb(122, 122, 122);
-                font-size: 12.5px;
+                font-size: 21.5px;
                 text-indent: .8em;
             }
         }
@@ -225,67 +212,73 @@ div#modal-create-page{
             flex-direction: column;
 
             >div:first-child{
-                height: 55px;
-                max-height: 55px;
-                min-height: 55px;
                 
-                position: relative;
-                display: flex;
-                justify-content: center;
-                >input {
-                    position: absolute;
-                    bottom: 0;
-                    width: 96%;
-                    height: 80%;
-                    border: none;
-                    border-bottom: 1px solid rgb(221,221,221);
-                    outline: 0;
-                    font-size: 19px;
-                    text-indent: .15555em;
-                    color: rgb(161, 161, 161);
 
-                    &::placeholder{
-                        color: #ddd;
+                box-sizing: border-box;
+                padding: 1em;
+
+                >input {
+                    width: 100%;
+                    height: 44px;
+                    background-color: $bg2;
+                    border-radius: .5em;
+                    border: rgba(122,122,122, .25) solid 1px;
+
+                    text-indent: .8em;
+                    font-size: .98em;
+
+                    &::placeholder{ color: #ddd; }
+
+                    &:focus{
+                        outline: 0;
+                        box-shadow: 0 0 0 1px oPrimaryColor(.4);
                     }
                 }
             }
 
             >div:last-child{
-                height: 95%;
+                width: 100%;
+                height: 100%;
                 overflow-y: scroll;
                 overflow-x: hidden;
-                padding: 1em;
+                padding: 0 1em;
+                box-sizing: border-box;
+                >button {
+                    @include buttonPropertys('normal', 120px, 32px);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-weight: bold;
+                    > svg {
+                        font-size: 1.3em;
+                        margin-right: .2em;
+                        font-weight: bold;
+                    }
+                }
             }
         }
 
-
-
         > footer {
-            box-shadow: rgb(221,221,221) 1px 1px 0px inset;
-            height: 45px;
+            height: 60px;
             width: 100%;
             display: flex;
             align-items: center;
             >div {
-                width: 50%;
-
-                &:first-child{
-                    >div > button {
-                        @include styleButtonBottomModal(120px);
-                        margin-left: 1.5em;
-                    }
-                }
-
-                &:last-child{
-                    >div{
-                        display: flex;
-                        justify-content: flex-end;
-                        >button {
-                            @include styleButtonBottomModal(100px);
-
-                            &:last-child{
-                                margin: 0 1.5em;
+                width: 100%;
+                >div{
+                    display: flex;
+                    justify-content: flex-end;
+                    >button {
+                        &:first-child{
+                            @include buttonPropertys('contoured', 120px, 33px);
+                            transition-duration: .3s;
+                            &:hover {
+                                background-color: oPrimaryColor(.1);
                             }
+                        }
+                        &:last-child{
+                            @include buttonPropertys('normal', 120px, 33px);
+                            margin: 0 1.5em;
                         }
                     }
                 }
@@ -294,16 +287,66 @@ div#modal-create-page{
     }
 }
 
-div#modal-add-section {
-    @include propertyModal(15000);
-    
-    > div {
-        width: 58%;
-        height: 78%;
-        background-color: white;
+div#alert{
+    @include modalPropertys(30000);
+    >div{
+        display: flex;
+        flex-direction: column;
+        background-color: #FFFFFF;
+        padding: .5em 1em;
+        border-radius: .4em;
+        min-width: 306px;
+        max-width: 306px;
     }
-}
 
-div#preload{
-    @include propertyModal(20000);
+    >div.confirmation{
+        
+        position: relative;
+        top: -15%;
+        >div:first-child{
+            padding: 1.7em 0;
+            >label{
+                color: #6f6f6f;
+                font-size: 0.983em;
+            }
+        }
+
+        >div:last-child{
+            display: flex;
+            justify-content: flex-end;
+            >button {
+                &:first-child{
+                    @include buttonPropertys('contoured', 40px, 28px);
+                    transition-duration: .3s;
+                    margin-right: 1em;
+                    &:hover { background-color: oPrimaryColor(.1); }
+                }
+                &:last-child{
+                    @include buttonPropertys('normal', 40px, 28px);
+                }
+            }
+        }
+    }
+
+    >div.preloader{
+        position: relative;
+        >div:first-child{
+            display: flex;
+            justify-content: center;
+            padding: .8em 0;
+            >label {
+                color: #6f6f6f;
+                font-size: 0.983em;
+            }
+        }
+
+        >div:last-child{
+            position: relative;
+            >div.linear-preloader{
+                position: absolute;
+                left: 0;
+                height: 10px;
+            }
+        }
+    }
 }
