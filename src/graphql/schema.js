@@ -29,7 +29,7 @@ export const typeDefs = gql`
     createPage(title: String!): Page!
     createPageWithSections(title: String!, sections: [SectionInput!]!): Page!
     addSectionToPage(title: String!, section: SectionInput!): Page!
-    addOrderedSectionToPage(beforeSection: ID!, section: SectionInput!): Page!
+    addOrderedSectionToPage(title: String!, beforeSection: ID!, section: SectionInput!, sections: [ID!]!): Page!
     removeSection(id: ID!): Page!
     updateSection(id: ID!, section: SectionInput!): Section!
   }

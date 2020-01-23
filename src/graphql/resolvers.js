@@ -24,6 +24,7 @@ async function page(title, callZome) {
     "get_page"
   )({ title: title }).then(page => {
     page = JSON.parse(page);
+    console.log(page);
     page = page.Ok;
     sections = page.sections;
   });
@@ -94,24 +95,38 @@ export const resolvers = {
       await callZome(
         "__H_Wiki",
         "wiki",
-        "create_page_with_elements"
-      )({ title, contents: sections }).then(res => {
+        "create_page_with_sections"
+      )({ title,  sections }).then(res => {
       });
       return await page(title, callZome);
     },
 
     async addSectionToPage(a, { title, section }, { callZome }) {
-      await callZome(
-        "__H_Wiki",
-        "wiki",
-        "add_page_element"
-      )({
-        title,
-        element: section
-      }).then(res => {
-      });
+      await callZome("__H_Wiki", "wiki", "add_section")
+      ({title, element: section})
+      .then(res => {});
+      
       return await page(title, callZome);
     },
+
+    async addOrderedSectionToPage(a, {title, beforeSection, section, sections}, { callZome }) {
+      var id, currentPage;
+
+      await callZome("__H_Wiki", "wiki", "add_section")
+      ({title, element: section})
+      .then(res => { id = JSON.parse(res).Ok; });
+
+      var i = parseInt(sections.indexOf(beforeSection));
+      i+=1;
+      sections.splice(i, 0, id);
+
+      await callZome("__H_Wiki","wiki","update_page")
+      ({sections, title})
+      .then(res => { currentPage = page(title, callZome); });
+
+      return currentPage;
+    },
+
     async updateSection(a, { id, section }, { callZome }) {
       await callZome(
         "__H_Wiki",
@@ -134,7 +149,7 @@ export const resolvers = {
       )({ address: id }).then(res => {
         title = JSON.parse(res).Ok;
       });
-      return page(title, callZome);
+      return page(title, callZome)
     }
   }
 };

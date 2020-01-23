@@ -195,13 +195,35 @@ div#page-manager{
         > header {
             height: 68px;
             display: flex;
-            align-items: center;
+            flex-wrap: nowrap;
             border-bottom: #EBECF1 1px solid;
-            
-            >label {
-                color: rgb(122, 122, 122);
-                font-size: 21.5px;
-                text-indent: .8em;
+            >div{
+                display: flex;
+                align-items: center;
+            }
+            >div:first-child {
+                width: 100%;
+                >label {
+                    color: rgb(122, 122, 122);
+                    font-size: 21.5px;
+                    text-indent: .8em;
+                }
+            }
+            >div:last-child{
+                min-width: 70px;
+                justify-content: center;
+                >button{
+                    @include buttonPropertys('contoured');
+                    padding: .2em;
+                    display: flex;
+                    align-items: center;
+                    font-size: 1.3em;
+                    border: none;
+                    transition-duration: .3s;
+                    &:hover{
+                        background-color: oPrimaryColor(.1);
+                    }
+                }
             }
         }
 
@@ -212,8 +234,6 @@ div#page-manager{
             flex-direction: column;
 
             >div:first-child{
-                
-
                 box-sizing: border-box;
                 padding: 1em;
 

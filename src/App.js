@@ -4,7 +4,7 @@ import { connect } from '@holochain/hc-web-client';
 import './styles/App.scss';
 import Editor from './components/Editor';
 import PreviewSection from './components/PreviewSection';
-import { MdCreate, MdAdd } from "react-icons/md";
+import { MdCreate, MdAdd, MdClose,  } from "react-icons/md";
 
 /** Apollo cliente, GraphQL */
 import { ApolloClient, InMemoryCache, gql } from "apollo-boost";
@@ -47,14 +47,13 @@ class App extends React.Component {
         confirmationMsg: 'equis',
         preloader: false,
         loadingPage: true,
-
       };
 
       this.pagesContainer = React.createRef();
   }
 
   componentDidMount() {
-    connect({ url: "ws://192.168.1.63:3400" })
+    connect({ url: "ws://192.168.1.63:50001" })
     .then((context) => {
       const schema = makeExecutableSchema({
         typeDefs,
@@ -126,6 +125,11 @@ class App extends React.Component {
   }
 
   storePage = () => {
+    this.setState({
+      alert: true,
+      preloader: true,
+      preloaderMsg: 'storing page'
+    });
     this.state.client
       .mutate({
         mutation: gql`
@@ -158,7 +162,9 @@ class App extends React.Component {
         }
 
         this.setState({
-          pages
+          pages,
+          preloader: false,
+          alert: false
         }, (_this=this)=>{
           _this.closePageManager();
         });
@@ -177,7 +183,7 @@ class App extends React.Component {
     });
   }
 
-  closeEditor(mode = undefined){
+  closeEditor(){
     this.setState({
       editorSettings: []
     }, (_this=this)=>{
@@ -191,6 +197,7 @@ class App extends React.Component {
   closePageManager = () => { this.setState({ showPageManager: false }); }
 
   createPage = () =>{
+    var _this = this;
     this.setState({
       pageData: {
         title: '',
@@ -198,19 +205,20 @@ class App extends React.Component {
         position: undefined
       },
       existingPage: false,
-    }, (_this=this)=> {
+    }, ()=> {
       _this.showPageManager();
     });
   }
 
   showPageData = (pos) => {
-    var currentPage = this.stateAssignment(this.state.pages[pos]);
+    var currentPage = this.stateAssignment(this.state.pages[pos]),
+      _this = this;
     currentPage.position = pos;
 
     this.setState({
       pageData: currentPage,
       existingPage: true
-    }, (_this=this)=> {
+    }, ()=> {
       _this.showPageManager();
     });
   }
@@ -259,6 +267,8 @@ class App extends React.Component {
     
     if (this.state.existingPage) {
 
+      this.setState({ preloader: true});
+
       if (mode === 'addns') {
 
         await this.state.client
@@ -288,14 +298,26 @@ class App extends React.Component {
 
       } else if (mode === 'addsb') {
         
+        var sections = [];
+        for (let i in pageData.sections) {
+            sections.push(pageData.sections[i].id);          
+        }
+
         await this.state.client
         .mutate({
           mutation: gql`
             mutation addOrderedSectionToPage(
+              $title:String!
               $beforeSection: ID!
               $section: SectionInput!
+              $sections: [ID!]!
             ) {
-              addOrderedSectionToPage(beforeSection: $beforeSection, section: $section) {
+              addOrderedSectionToPage(
+                title: $title,
+                beforeSection: $beforeSection,
+                section: $section,
+                sections: $sections
+              ) {
                 title
                 sections {
                   id
@@ -306,7 +328,12 @@ class App extends React.Component {
               }
             }
           `,
-          variables: {beforeSection: pageData.sections[pos].id, section: section}
+          variables: {
+            title: pageData.title,
+            beforeSection: pageData.sections[pos].id,
+            section,
+            sections
+          }
         })
         .then(res => {
           var updatedPage = res.data;
@@ -352,7 +379,8 @@ class App extends React.Component {
         });
 
       }
-
+      state.alert = false;
+      state.preloader = false;
     } else {
 
       if (mode === 'addns') {
@@ -372,12 +400,13 @@ class App extends React.Component {
         pageData.sections.splice(pos, 1, secitonUpdated);
 
         state = { pageData };
+        state.alert = false;
       }
 
     }
 
     this.setState(state, (_this=this)=>{
-      _this.closeEditor(mode);
+      _this.closeEditor();
     });
 
   }
@@ -386,8 +415,14 @@ class App extends React.Component {
     var pageData = this.stateAssignment(this.state.pageData),
         pages = this.stateAssignment(this.state.pages),
         state;
-
+        
     if (this.state.existingPage) {
+      
+      this.setState({ 
+        preloader: true,
+        preloaderMsg: 'removing section'
+      });
+
       await this.state.client
       .mutate({
         mutation: gql`
@@ -416,7 +451,6 @@ class App extends React.Component {
           pageData,
           pages
         };
-
       });
     } else {
       pageData.sections.splice(pos, 1);
@@ -445,10 +479,8 @@ class App extends React.Component {
 
   processPageData = () =>{
     this.setState({
-      confirmation: false,
-      preload: true,
-      
-    },(_this=this, pageDataProcess = this.state.pageDataProcess)=>{
+      confirmation: false     
+    }, (_this=this, pageDataProcess = this.state.pageDataProcess)=>{
       if (pageDataProcess.process === 'update') {
         _this.updatePageSections(
           pageDataProcess.mode,
@@ -517,9 +549,18 @@ class App extends React.Component {
           <div id='page-manager'>
             <div>
               <header>
-                <label>
-                  { this.state.existingPage ? this.state.pageData.title : 'Create page' }
-                </label>
+                <div>
+                  <label>
+                    { this.state.existingPage ? this.state.pageData.title : 'Create page' }
+                  </label>
+                </div>
+                <div>
+                  {this.state.existingPage && 
+                    <button onClick={this.closePageManager}>
+                      <MdClose />
+                    </button>
+                  }
+                </div>
               </header>
               <section>
                 {!this.state.existingPage &&
@@ -556,14 +597,16 @@ class App extends React.Component {
 
                 </div>
               </section>
-              <footer>
-                <div>
+              {!this.state.existingPage &&
+                <footer>
                   <div>
-                    <button onClick={this.closePageManager}>Cancel</button>
-                    <button onClick={this.storePage}>{this.state.existingPage ? 'Update' : 'Save' }</button>
+                    <div>
+                      <button onClick={this.closePageManager}>Cancel</button>
+                      <button onClick={this.storePage}>{this.state.existingPage ? 'Update' : 'Save' }</button>
+                    </div>
                   </div>
-                </div>
-              </footer>
+                </footer>
+              }
             </div>
           </div>
         }
@@ -601,10 +644,10 @@ class App extends React.Component {
             {this.state.preloader &&
               <div className='preloader'>
                 <div>
-                  <label>Updating record</label>
+                  <label>{this.state.preloaderMsg}</label>
                 </div>  
                 <div>
-                  <label>loading ...</label>
+                  <label>processing...</label>
                 </div>
               </div>
             }

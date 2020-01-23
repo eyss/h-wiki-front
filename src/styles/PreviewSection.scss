@@ -25,11 +25,13 @@ div.preview-section{
         min-width: 60px;
         display: flex;
         justify-content: center;
-        align-items: center;
+
         >div{
             position: relative;
             
             > ul {
+                position: relative;
+                top: .2em;
                 > li {
                     list-style: none;
                     position: relative;

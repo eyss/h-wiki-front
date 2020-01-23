@@ -1,6 +1,6 @@
 import React from 'react';
 import MarkdownRenderer from 'react-markdown-renderer'
-import {MdMoreVert, MdCreate, MdClear, MdPlaylistAdd} from "react-icons/md"; 
+import {MdMoreVert, MdCreate, MdRemove, MdPlaylistAdd} from "react-icons/md"; 
 
 export default class PreviewSection extends React.Component {
     // eslint-disable-next-line no-useless-constructor
@@ -52,7 +52,7 @@ export default class PreviewSection extends React.Component {
                               
                               <li>
                                 <button onClick={this.removeSection}>
-                                  <MdClear /> Remove
+                                  <MdRemove /> Remove
                                 </button>
                               </li>
 
