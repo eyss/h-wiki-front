@@ -1,3 +1,5 @@
+var id, currentPage;
+
 async function getSections(vec, callZome) {
   var sections = [];
   for (var i in vec) {
@@ -24,7 +26,6 @@ async function page(title, callZome) {
     "get_page"
   )({ title: title }).then(page => {
     page = JSON.parse(page);
-    console.log(page);
     page = page.Ok;
     sections = page.sections;
   });
@@ -104,13 +105,20 @@ export const resolvers = {
     async addSectionToPage(a, { title, section }, { callZome }) {
       await callZome("__H_Wiki", "wiki", "add_section")
       ({title, element: section})
-      .then(res => {});
-      
-      return await page(title, callZome);
+      .then(res => { id = [JSON.parse(res).Ok]; });
+
+      await callZome("__H_Wiki","wiki","update_page")
+      ({sections: id, title})
+      // .then(res => { currentPage = page(title, callZome); });
+
+      await callZome("__H_Wiki","wiki","handle_receive_chat_message")
+      ({message: 'texto'})
+      .then(res => {  currentPage = page(title, callZome); });
+
+      return currentPage;
     },
 
     async addOrderedSectionToPage(a, {title, beforeSection, section, sections}, { callZome }) {
-      var id, currentPage;
 
       await callZome("__H_Wiki", "wiki", "add_section")
       ({title, element: section})
@@ -121,8 +129,11 @@ export const resolvers = {
       sections.splice(i, 0, id);
 
       await callZome("__H_Wiki","wiki","update_page")
-      ({sections, title})
-      .then(res => { currentPage = page(title, callZome); });
+      ({sections, title});
+
+      await callZome("__H_Wiki","wiki","handle_receive_chat_message")
+      ({message: 'texto'})
+      .then(res => {  currentPage = page(title, callZome); });
 
       return currentPage;
     },

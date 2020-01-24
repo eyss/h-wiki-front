@@ -293,11 +293,9 @@ class App extends React.Component {
         })
         .then(res => {
           var updatedPage = res.data.addSectionToPage;
-          console.log('Updated page for addSectionToPage : ', updatedPage);
         });
 
       } else if (mode === 'addsb') {
-        
         var sections = [];
         for (let i in pageData.sections) {
             sections.push(pageData.sections[i].id);          
@@ -336,9 +334,12 @@ class App extends React.Component {
           }
         })
         .then(res => {
-          var updatedPage = res.data;
-          console.log('Updated page for addOrderedSectionToPage : ', updatedPage);
+          let updatedPage = res.data.addOrderedSectionToPage;
+          updatedPage.position = pageData.position;
 
+          state = {
+            pageData: updatedPage
+          };
         });
 
       } else if (mode === 'edit') {
@@ -381,6 +382,8 @@ class App extends React.Component {
       }
       state.alert = false;
       state.preloader = false;
+      await this.state.client.resetStore();
+
     } else {
 
       if (mode === 'addns') {
