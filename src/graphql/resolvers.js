@@ -105,28 +105,42 @@ export const resolvers = {
     async addSectionToPage(a, { title, section }, { callZome }) {
       await callZome("__H_Wiki", "wiki", "add_section")
       ({title, element: section})
-      .then(res => { id = [JSON.parse(res).Ok]; });
+      .then(res => {
+        console.log('res de add_section', res);
+        id = [JSON.parse(res).Ok];
+      });
 
       await callZome("__H_Wiki","wiki","update_page")
       ({sections: id, title})
-      // .then(res => { currentPage = page(title, callZome); });
+      .then(res => {
+        console.log('res de update_page', res);
+        currentPage = page(title, callZome);
+      });
 
       await callZome("__H_Wiki","wiki","handle_receive_chat_message")
       ({message: 'texto'})
       .then(res => {  currentPage = page(title, callZome); });
-
+      console.log('Lo que se devuelve', currentPage);
       return currentPage;
     },
 
-    async addOrderedSectionToPage(a, {title, beforeSection, section, sections}, { callZome }) {
+    async addOrderedSectionToPage(a, {title, beforeSection, section, sections, mode}, { callZome }) {
 
       await callZome("__H_Wiki", "wiki", "add_section")
       ({title, element: section})
       .then(res => { id = JSON.parse(res).Ok; });
 
-      var i = parseInt(sections.indexOf(beforeSection));
-      i+=1;
-      sections.splice(i, 0, id);
+      if (mode === 'addsa') {
+        let sectionsUpdate;
+        sectionsUpdate = [id, ...sections];
+        sections = [];
+        sections = sectionsUpdate;
+      } else if (mode === 'addsb') {
+        let i = parseInt(sections.indexOf(beforeSection));
+        i+=1;
+        sections.splice(i, 0, id);
+      }
+
 
       await callZome("__H_Wiki","wiki","update_page")
       ({sections, title});
@@ -160,7 +174,7 @@ export const resolvers = {
       )({ address: id }).then(res => {
         title = JSON.parse(res).Ok;
       });
-      return page(title, callZome)
+      return page(title, callZome);
     }
   }
 };

@@ -356,17 +356,13 @@ div#alert{
             padding: .8em 0;
             >label {
                 color: #6f6f6f;
-                font-size: 0.983em;
+                font-size: 0.975em;
             }
         }
 
         >div:last-child{
             position: relative;
-            >div.linear-preloader{
-                position: absolute;
-                left: 0;
-                height: 10px;
-            }
+            padding: .2em 0;
         }
     }
 }

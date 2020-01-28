@@ -22,6 +22,9 @@ export default class Editor extends React.Component {
   }
 
   updatePageSections = () => {
+    console.log('Modo en Editor.js', this.props.mode);
+
+
     if (this.props.mode === 'edit') {
       this.props.showConfirmation({
         process: 'update',

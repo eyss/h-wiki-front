@@ -50,10 +50,19 @@ class App extends React.Component {
       };
 
       this.pagesContainer = React.createRef();
+      this.pageStructure = `
+        title
+        sections {
+          id
+          type
+          content
+          rendered_content
+        }
+      `;
   }
 
   componentDidMount() {
-    connect({ url: "ws://192.168.1.63:50001" })
+    connect({ url: "ws://192.168.1.63:3400" })
     .then((context) => {
       const schema = makeExecutableSchema({
         typeDefs,
@@ -99,13 +108,7 @@ class App extends React.Component {
       query: gql`
         {
           page(title:"${e.target.textContent}") {
-            title
-            sections {
-              id
-              type
-              content
-              rendered_content
-            }
+            ${this.pageStructure}
           }
         }
       `
@@ -130,6 +133,7 @@ class App extends React.Component {
       preloader: true,
       preloaderMsg: 'storing page'
     });
+
     this.state.client
       .mutate({
         mutation: gql`
@@ -138,13 +142,7 @@ class App extends React.Component {
             $sections: [SectionInput!]!
           ) {
             createPageWithSections(title: $title, sections: $sections) {
-              title
-              sections {
-                id
-                type
-                content
-                rendered_content
-              }
+              ${this.pageStructure}
             }
           }
         `,
@@ -184,12 +182,16 @@ class App extends React.Component {
   }
 
   closeEditor(){
+    var state = {showEditor: false};
+
+    if (this.state.alert) { state.alert = false; }
+    if (this.state.preloader) { state.preloader = false; }
+    if (this.state.confirmation) { state.confirmation = false; }
+
     this.setState({
       editorSettings: []
     }, (_this=this)=>{
-      _this.setState({
-        showEditor: false,
-      })
+      _this.setState(state)
     });
   }
 
@@ -266,10 +268,14 @@ class App extends React.Component {
         secitonUpdated;
     
     if (this.state.existingPage) {
-
-      this.setState({ preloader: true});
+      this.setState({
+        alert: true,
+        preloader: true,
+      });      
+      var pages = this.stateAssignment(this.state.pages);
 
       if (mode === 'addns') {
+        this.setState({preloaderMsg: 'Adding section to the page'});
 
         await this.state.client
         .mutate({
@@ -279,13 +285,7 @@ class App extends React.Component {
               $section: SectionInput!
             ) {
               addSectionToPage(title: $title, section: $section) {
-                title
-                sections {
-                  id
-                  type
-                  content
-                  rendered_content
-                }
+                ${this.pageStructure}
               }
             }
           `,
@@ -293,9 +293,12 @@ class App extends React.Component {
         })
         .then(res => {
           var updatedPage = res.data.addSectionToPage;
+          console.log(updatedPage);
         });
 
-      } else if (mode === 'addsb') {
+      } else if (mode === 'addsb' || mode === 'addsa') {
+        this.setState({preloaderMsg: 'Adding section to the page'});
+
         var sections = [];
         for (let i in pageData.sections) {
             sections.push(pageData.sections[i].id);          
@@ -305,24 +308,20 @@ class App extends React.Component {
         .mutate({
           mutation: gql`
             mutation addOrderedSectionToPage(
-              $title:String!
+              $title: String!
               $beforeSection: ID!
               $section: SectionInput!
-              $sections: [ID!]!
+              $sections: [ID!]!,
+              $mode: String!
             ) {
               addOrderedSectionToPage(
                 title: $title,
                 beforeSection: $beforeSection,
                 section: $section,
-                sections: $sections
+                sections: $sections,
+                mode: $mode
               ) {
-                title
-                sections {
-                  id
-                  type
-                  content
-                  rendered_content
-                }
+                ${this.pageStructure}
               }
             }
           `,
@@ -330,19 +329,25 @@ class App extends React.Component {
             title: pageData.title,
             beforeSection: pageData.sections[pos].id,
             section,
-            sections
+            sections,
+            mode
           }
         })
         .then(res => {
           let updatedPage = res.data.addOrderedSectionToPage;
+
+          pages.splice(pageData.position, 1, updatedPage);
+
           updatedPage.position = pageData.position;
 
           state = {
-            pageData: updatedPage
+            pageData: updatedPage,
+            pages
           };
         });
 
       } else if (mode === 'edit') {
+        this.setState({preloaderMsg: 'Updating section to the page'});
 
         await this.state.client
         .mutate({
@@ -352,10 +357,10 @@ class App extends React.Component {
               $section: SectionInput!
             ) {
               updateSection(id: $id, section: $section) {
-                  id
-                  typeupdatePageSections
-                  content
-                  rendered_content
+                id
+                typeupdatePageSections
+                content
+                rendered_content
               }
             }
           `,
@@ -376,12 +381,9 @@ class App extends React.Component {
             pageData,
             pages
           };
-
         });
-
       }
-      state.alert = false;
-      state.preloader = false;
+      
       await this.state.client.resetStore();
 
     } else {
@@ -391,9 +393,20 @@ class App extends React.Component {
         pageData.sections.push(section);
         state = {pageData};
 
-      } else if (mode === 'addsb') {
+      } else if (mode === 'addsb' || mode === 'addsa') {
         
-        pageData.sections.splice((pos+1), 0, section);
+        
+
+        if (mode === 'addsa') {
+          let sectionsUpdate;
+          sectionsUpdate = [section, ...pageData.sections];
+          pageData.sections = [];
+          pageData.sections = sectionsUpdate;
+
+        } else if (mode === 'addsb') {
+          pageData.sections.splice((pos+1), 0, section);
+        }
+
         state = {pageData};
 
       } else if (mode === 'edit') {
@@ -433,13 +446,7 @@ class App extends React.Component {
             $id: ID!
           ) {
             removeSection(id: $id) {
-              title
-              sections{
-                id
-                type
-                content
-                rendered_content
-              }
+              ${this.pageStructure}
             }
           }
         `,
@@ -461,6 +468,8 @@ class App extends React.Component {
         pageData
       };
     }
+    
+    await this.state.client.resetStore();
 
     this.setState(state, (_this=this)=>{
       var _state = {alert: false};
@@ -605,7 +614,7 @@ class App extends React.Component {
                   <div>
                     <div>
                       <button onClick={this.closePageManager}>Cancel</button>
-                      <button onClick={this.storePage}>{this.state.existingPage ? 'Update' : 'Save' }</button>
+                      <button onClick={this.storePage}>Save</button>
                     </div>
                   </div>
                 </footer>
@@ -650,7 +659,7 @@ class App extends React.Component {
                   <label>{this.state.preloaderMsg}</label>
                 </div>  
                 <div>
-                  <label>processing...</label>
+                  <div className='simple-preloader'></div>
                 </div>
               </div>
             }

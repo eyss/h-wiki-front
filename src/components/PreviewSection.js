@@ -19,6 +19,7 @@ export default class PreviewSection extends React.Component {
     }
 
     showEditor = (mode) => {
+      console.log('Modo en Preview.js para mostrar el editor', mode);
       this.props.showEditor(mode, this.props.pos)
     }
 
@@ -59,7 +60,7 @@ export default class PreviewSection extends React.Component {
 
                               {this.props.pos === 0 &&
                                 <li>
-                                  <button>
+                                <button onClick={e => {this.showEditor('addsa')}}>
                                     <MdPlaylistAdd /> Add section above
                                   </button>
                                 </li>
