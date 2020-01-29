@@ -77,24 +77,31 @@ class App extends React.Component {
         .query({
           query: gql`
             {
-              homePage {
+              allPages {
                 title
-                sections {
-                  content
-                }
               }
             }
           `
         })
-        .then(e =>{
-          let homePage = e.data.homePage;
+        .then(pages =>{
+          pages = pages.data.allPages;
+          console.log('es aqui :', pages);
+          let homePage;
 
-          if (!homePage.sections[0].content.length) {
-            homePage.sections[0].content = 'This is the page of H-wiki';
-            homePage.noLinks = true;
-          }     
-
-          this.setState({ pages: [homePage], loadingPage: false })
+          homePage = {
+            title: 'Homepage',
+            sections: [
+              {
+                content: this.linkFormatter(pages)
+              }
+            ],
+            renderedContent: this.linkFormatter(pages)
+          }
+          
+          this.setState({
+            pages: [homePage],
+            loadingPage: false
+          });
         })
         .catch(e => console.log("object", e));
     });
@@ -102,6 +109,7 @@ class App extends React.Component {
     
   showPage(e){
     e.preventDefault();
+    console.log(e.target.textContent);
     this.setState({loadingPage: true})
     this.state.client
     .query({
@@ -115,6 +123,7 @@ class App extends React.Component {
     })
     .then(page => {
       page = page.data.page;
+      page.renderedContent = this.sectionContentFormatter(page.sections);
       var pages = this.state.pages;
       pages.splice(this.getPagePositionPage(e) + 1, pages.length);
       pages = [...pages, page];
@@ -124,6 +133,10 @@ class App extends React.Component {
       }, (_this=this) => {
         _this.pagesContainer.current.scrollTo(window.innerWidth, 0);
       });
+    }).catch(e=>{
+      this.setState({
+        loadingPage: false
+      })
     });
   }
 
@@ -335,6 +348,7 @@ class App extends React.Component {
         })
         .then(res => {
           let updatedPage = res.data.addOrderedSectionToPage;
+          updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
 
           pages.splice(pageData.position, 1, updatedPage);
 
@@ -358,7 +372,7 @@ class App extends React.Component {
             ) {
               updateSection(id: $id, section: $section) {
                 id
-                typeupdatePageSections
+                type
                 content
                 rendered_content
               }
@@ -373,10 +387,9 @@ class App extends React.Component {
         .then(res => {
           secitonUpdated = res.data.updateSection;
           pageData.sections.splice(pos, 1, secitonUpdated);
-
-          let pages = this.stateAssignment(this.state.pages);
+          pageData.renderedContent = this.sectionContentFormatter(pageData.sections);
           pages.splice(pageData.position, 1, pageData);
-
+          console.log(pages[pageData.position]);
           state = {
             pageData,
             pages
@@ -455,6 +468,7 @@ class App extends React.Component {
       .then(res => {
 
         pageData.sections.splice(pos, 1);
+        pageData.renderedContent = this.sectionContentFormatter(pageData.sections);
         pages.splice(pageData.position, 1, pageData);
 
         state = {
@@ -521,7 +535,24 @@ class App extends React.Component {
     });
   }
 
+  linkFormatter(links){
+    let content = '', i;
+    for(i in links){
+      content = content + '- [' + links[i].title + ']() \n';
+    }
+    return content;
+  }
+  
+  sectionContentFormatter(sections){
+    let content = '', i;
+    for (i in sections) {
+      content = content + sections[i].content + '\n\n';
+    }
+    return content;
+  }
+
   render() {
+
     return (
       <div id='container'>
 

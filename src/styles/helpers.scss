@@ -58,7 +58,7 @@ div.linear-preloader {
     width: 100%;
     background-color: oPrimaryColor(.3);
     border-radius: 2px;
-    min-height: 5px;
+    min-height: 3px;
 
     >div {
         background-color: $primary-color;
@@ -205,4 +205,30 @@ div.simple-preloader{
 		left: 100%;
 		width: 0%
 	}
+}
+
+
+// To page and preview section
+div.preview-section,
+article.page-container{
+    span[title='Underline'], 
+    div.rc-md-navigation,
+    section.sec-md,
+    div.tool-bar{
+        display: none!important;
+    }
+    div.rc-md-editor {
+        background-color: transparent;
+        border: none;
+        margin: 0!important;
+    }
+
+    section.sec-html{
+        padding:0;
+        margin:0!important;
+        div.html-wrap{
+            padding:0;
+            margin:0;
+        }
+    }
 }

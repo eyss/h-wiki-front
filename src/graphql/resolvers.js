@@ -1,180 +1,194 @@
-var id, currentPage;
-
-async function getSections(vec, callZome) {
-  var sections = [];
-  for (var i in vec) {
-    await callZome(
-      "__H_Wiki",
-      "wiki",
-      "get_section"
-    )({ address: vec[i] }).then(section => {
-      section = JSON.parse(section).Ok;
-      section.id = vec[i];
-      delete section.page_address;
-
-      sections.push(section);
-    });
-  }
-  return sections;
-}
-
-async function page(title, callZome) {
-  var sections = [];
-  await callZome(
-    "__H_Wiki",
-    "wiki",
-    "get_page"
-  )({ title: title }).then(page => {
-    page = JSON.parse(page);
-    page = page.Ok;
-    sections = page.sections;
-  });
-  return {
-    title,
-    sections: getSections(sections, callZome)
-  };
-}
-
+var id;
 export const resolvers = {
   Query: {
-    async homePage(_, __, { callZome }) {
-      var page;
-      await callZome(
+    async page(_, { title }, { callZome }) {
+      return title
+    },
+    allPages(_, __, { callZome }) {
+      return callZome(
         "__H_Wiki",
         "wiki",
-        "get_home_page"
-      )({}).then(response => {
-        response = JSON.parse(response);
-        if (response.Err) {
-          page = {
-            title: "Welcome to H-wiki",
-            sections: [
-              {
-                id: 1,
-                type: "text",
-                content: "",
-                rendered_content: "text/html",
-                noLinks: true
-              }
-            ]
-          };
+        "get_titles"
+      )({}).then(page => {
+        page = JSON.parse(page);
+        if (page.Ok) {
+          return page.Ok;
         } else {
-          let sections = response.Ok.sections;
-          page = {
-            title: response.Ok.title,
-            sections: []
-          };
-
-          if (!sections.length) {
-            page.sections[0] = {
-              id: 0,
-              type: "text",
-              content: "No pages have been created",
-              rendered_content: "<p>No pages have been created</p>"
-            };
-          } else {
-            for (const key in sections) {
-              page.sections.push({
-                id: key,
-                type: sections[key].type,
-                content: sections[key].content,
-                rendered_content: "sections[key].element_type"
-              });
-            }
-          }
+          throw new Error(page.Err);
         }
       });
+    }
+  },
 
-      return page;
+  Page: {
+    title(title) {
+      return title;
     },
-    async page(_, { title }, { callZome }) {
-      return await page(title, callZome);
+    sections(title, __, { callZome }) {
+      return callZome(
+        "__H_Wiki",
+        "wiki",
+        "get_page"
+      )({ title: title }).then(page => {
+        page = JSON.parse(page);
+
+        if (page.Ok) {
+          return page.Ok.sections;
+        } else {
+          throw new Error(page.Err);
+        }
+      });
+    }
+  },
+  Section: {
+    id(id) {
+      return id;
+    },
+    type(id, __, { callZome }) {
+      return callZome(
+        "__H_Wiki",
+        "wiki",
+        "get_section"
+      )({ address: id }).then(page => {
+        page = JSON.parse(page);
+        if (page.Ok) {
+          return page.Ok.type;
+        } else {
+          throw new Error(page.Err);
+        }
+      });
+    },
+    content(id, __, { callZome }) {
+      return callZome(
+        "__H_Wiki",
+        "wiki",
+        "get_section"
+      )({ address: id }).then(page => {
+        page = JSON.parse(page);
+        if (page.Ok) {
+          return page.Ok.content;
+        } else {
+          throw new Error(page.Err);
+        }
+      });
+    },
+    rendered_content(id, __, { callZome }) {
+      return callZome(
+        "__H_Wiki",
+        "wiki",
+        "get_section"
+      )({ address: id }).then(page => {
+        page = JSON.parse(page);
+        if (page.Ok) {
+          return page.Ok.rendered_content;
+        } else {
+          throw new Error(page.Err);
+        }
+      });
     }
   },
   Mutation: {
     async createPageWithSections(a, { title, sections }, { callZome }) {
-      await callZome(
+      return callZome(
         "__H_Wiki",
         "wiki",
         "create_page_with_sections"
-      )({ title,  sections }).then(res => {
+      )({ title, sections }).then(res => {
+        if (JSON.parse(res).Ok) {
+          return title;
+        } else {
+          throw new Error(JSON.parse(res).Err);
+        }
       });
-      return await page(title, callZome);
     },
 
     async addSectionToPage(a, { title, section }, { callZome }) {
-      await callZome("__H_Wiki", "wiki", "add_section")
-      ({title, element: section})
-      .then(res => {
-        console.log('res de add_section', res);
+      await callZome(
+        "__H_Wiki",
+        "wiki",
+        "add_section"
+      )({ title, element: section }).then(res => {
+        console.log("res de add_section", res);
         id = [JSON.parse(res).Ok];
       });
 
-      await callZome("__H_Wiki","wiki","update_page")
-      ({sections: id, title})
-      .then(res => {
-        console.log('res de update_page', res);
-        currentPage = page(title, callZome);
+      return callZome(
+        "__H_Wiki",
+        "wiki",
+        "update_page"
+      )({ sections: id, title }).then(res => {
+        console.log("res de update_page", res);
+        if (JSON.parse(res).Ok) {
+          return title;
+        } else {
+          throw new Error(JSON.parse(res).Err);
+        }
       });
-
-      await callZome("__H_Wiki","wiki","handle_receive_chat_message")
-      ({message: 'texto'})
-      .then(res => {  currentPage = page(title, callZome); });
-      console.log('Lo que se devuelve', currentPage);
-      return currentPage;
     },
 
-    async addOrderedSectionToPage(a, {title, beforeSection, section, sections, mode}, { callZome }) {
+    async addOrderedSectionToPage(
+      a,
+      { title, beforeSection, section, sections, mode },
+      { callZome }
+    ) {
+      await callZome(
+        "__H_Wiki",
+        "wiki",
+        "add_section"
+      )({ title, element: section }).then(res => {
+        id = JSON.parse(res).Ok;
+      });
 
-      await callZome("__H_Wiki", "wiki", "add_section")
-      ({title, element: section})
-      .then(res => { id = JSON.parse(res).Ok; });
-
-      if (mode === 'addsa') {
+      if (mode === "addsa") {
         let sectionsUpdate;
         sectionsUpdate = [id, ...sections];
         sections = [];
         sections = sectionsUpdate;
-      } else if (mode === 'addsb') {
+      } else if (mode === "addsb") {
         let i = parseInt(sections.indexOf(beforeSection));
-        i+=1;
+        i += 1;
         sections.splice(i, 0, id);
       }
 
-
-      await callZome("__H_Wiki","wiki","update_page")
-      ({sections, title});
-
-      await callZome("__H_Wiki","wiki","handle_receive_chat_message")
-      ({message: 'texto'})
-      .then(res => {  currentPage = page(title, callZome); });
-
-      return currentPage;
+      return callZome(
+        "__H_Wiki",
+        "wiki",
+        "update_page"
+      )({ sections, title }).then(res => {
+        if (JSON.parse(res).Ok) {
+          return title;
+        } else {
+          throw new Error(JSON.parse(res).Err);
+        }
+      });
     },
 
     async updateSection(a, { id, section }, { callZome }) {
-      await callZome(
+      return callZome(
         "__H_Wiki",
         "wiki",
         "update_element"
       )({ address: id, element: section }).then(res => {
+        if (JSON.parse(res).Ok) {
+          return id;
+        } else {
+          throw new Error(JSON.parse(res).Err);
+        }
       });
-
-      section.id = id;
-
-      return section;
     },
 
     async removeSection(a, { id }, { callZome }) {
-      var title;
-      await callZome(
+      return callZome(
         "__H_Wiki",
         "wiki",
         "delete_element"
       )({ address: id }).then(res => {
-        title = JSON.parse(res).Ok;
+        if (JSON.parse(res).Ok) {
+          return JSON.parse(res).Ok;
+        } else {
+          throw new Error(JSON.parse(res).Err);
+        }
       });
-      return page(title, callZome);
     }
   }
 };

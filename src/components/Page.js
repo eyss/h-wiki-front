@@ -1,12 +1,17 @@
 import React, { Fragment } from 'react';
-import MarkdownRenderer from 'react-markdown-renderer'
 import getEventListeners from 'geteventlisteners';
 
-class Page extends React.Component {
+import MdEditor from 'react-markdown-editor-lite';
+import MarkdownIt from 'markdown-it';
 
+class Page extends React.Component {
+    mdEditor = null;
+    mdParser = null;
     constructor(props){
         super(props);
         this.article = React.createRef();
+
+        this.mdParser = new MarkdownIt();
     }
 
     componentDidMount=()=>{ this.setFnLinks(); }
@@ -14,10 +19,9 @@ class Page extends React.Component {
     componentDidUpdate=()=>{ this.setFnLinks(); }
 
     setFnLinks() {
-        
-        let links = this.article.current.querySelectorAll('a'),
-            _this = this;
-
+        setTimeout(()=>{
+            let links = this.article.current.querySelectorAll('a'),
+        _this = this;
         for(var i in links) {
             if (links[i].tagName === 'A' && links[i].getEventListeners('click') === undefined) {
                 links[i]
@@ -27,12 +31,14 @@ class Page extends React.Component {
                 });
             }
         }
+        }, 100);
     }
 
     render() {
         let data = this.props.data;
         return(
-            <article ref={this.article}>
+            <article ref={this.article}
+                className='page-container'>
                 <header>
                     <div>
                         <div>
@@ -40,16 +46,11 @@ class Page extends React.Component {
                         <h1>{data.title}</h1>
                     </div>
                 </header>
-                {data.sections.map((section, key) => {
-                    return(
-                        <Fragment key={key}>
-                            <MarkdownRenderer 
-                                data-nsection={key}
-                                markdown={section.content}
-                            />
-                        </Fragment>
-                    )
-                })}
+                <MdEditor
+                    ref={node => this.mdEditor = node}  
+                    value={data.renderedContent}
+                    renderHTML={(text) => this.mdParser.render(text)}
+                />
             </article>
         )
     }

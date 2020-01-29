@@ -5,7 +5,6 @@ import MarkdownIt from 'markdown-it';
 export default class Editor extends React.Component {
   mdEditor = null;
   mdParser = null;
-  content = '';
   constructor(props) {
     super(props);
     this.mdParser = new MarkdownIt();

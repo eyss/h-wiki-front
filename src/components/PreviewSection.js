@@ -1,11 +1,14 @@
 import React from 'react';
-import MarkdownRenderer from 'react-markdown-renderer'
 import {MdMoreVert, MdCreate, MdRemove, MdPlaylistAdd} from "react-icons/md"; 
 
+import MdEditor from 'react-markdown-editor-lite';
+import MarkdownIt from 'markdown-it';
 export default class PreviewSection extends React.Component {
     // eslint-disable-next-line no-useless-constructor
     constructor(props) {
       super(props);
+      this.mdParser = new MarkdownIt();
+
       this.ps = React.createRef();
     }
 
@@ -34,7 +37,11 @@ export default class PreviewSection extends React.Component {
         return(
             <div className='preview-section'>
                 <div ref={this.ps}>
-                  <MarkdownRenderer markdown={!this.props.element_content ? this.props.content : this.props.element_content } />
+                  <MdEditor
+                    ref={node => this.mdEditor = node}  
+                    value={!this.props.element_content ? this.props.content : this.props.element_content }
+                    renderHTML={(text) => this.mdParser.render(text)}
+                  />
                 </div>
 
                 <div>
