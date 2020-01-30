@@ -14,7 +14,7 @@ export const typeDefs = gql`
   }
 
   type Query {
-    page (title: String!): Page!
+    page(title: String!): Page!
     homePage: Page!
     allPages: [Page!]!
   }
@@ -29,8 +29,35 @@ export const typeDefs = gql`
     createPage(title: String!): Page!
     createPageWithSections(title: String!, sections: [SectionInput!]!): Page!
     addSectionToPage(title: String!, section: SectionInput!): Page!
-    addOrderedSectionToPage(title: String!, beforeSection: ID!, section: SectionInput!, sections: [ID!]!, mode: String!): Page!
+    addOrderedSectionToPage(
+      title: String!
+      beforeSection: ID!
+      section: SectionInput!
+      sections: [ID!]!
+      mode: String!
+    ): Page!
     removeSection(id: ID!): Page!
     updateSection(id: ID!, section: SectionInput!): Section!
+  }
+  type Role {
+    name: String!
+    members: [User!]!
+  }
+
+  extend type Query {
+    allRoles: [Role!]!
+    allUsers: [User!]!
+  }
+
+  type User {
+    userName: String!
+    roles: [Role!]!
+  }
+
+  extend type Mutation {
+    createRole(name: String!): Role!
+    assignToRole(roleName: String!, agentId: ID!): Role!
+    unassignToRole(roleName: String!, agentId: ID!): Role!
+    createUser(name: String!): User!
   }
 `;

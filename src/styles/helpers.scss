@@ -211,12 +211,14 @@ div.simple-preloader{
 // To page and preview section
 div.preview-section,
 article.page-container{
+
     span[title='Underline'], 
     div.rc-md-navigation,
     section.sec-md,
     div.tool-bar{
         display: none!important;
     }
+
     div.rc-md-editor {
         background-color: transparent;
         border: none;
@@ -227,8 +229,8 @@ article.page-container{
         padding:0;
         margin:0!important;
         div.html-wrap{
-            padding:0;
-            margin:0;
+            padding:0!important;
+            margin:0!important;
         }
     }
 }

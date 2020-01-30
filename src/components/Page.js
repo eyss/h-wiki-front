@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import getEventListeners from 'geteventlisteners';
 
 import MdEditor from 'react-markdown-editor-lite';
@@ -18,20 +18,16 @@ class Page extends React.Component {
     
     componentDidUpdate=()=>{ this.setFnLinks(); }
 
-    setFnLinks() {
-        setTimeout(()=>{
-            let links = this.article.current.querySelectorAll('a'),
-        _this = this;
-        for(var i in links) {
-            if (links[i].tagName === 'A' && links[i].getEventListeners('click') === undefined) {
-                links[i]
-                .addEventListener('click', (e) =>{
+    setFnLinks = (e, _this = this) => {
+        if (this.article.current.getEventListeners('click') === undefined) {
+            this.article.current
+                .addEventListener('click', function(e) {
                     e.preventDefault();
-                    _this.props.showPage(e);
+                    if (e.target.nodeName === 'A') {
+                        _this.props.showPage(e);
+                    }
                 });
-            }
         }
-        }, 100);
     }
 
     render() {

@@ -4,7 +4,7 @@ import { connect } from '@holochain/hc-web-client';
 import './styles/App.scss';
 import Editor from './components/Editor';
 import PreviewSection from './components/PreviewSection';
-import { MdCreate, MdAdd, MdClose,  } from "react-icons/md";
+import { MdCreate, MdAdd, MdClose, MdLibraryAdd } from "react-icons/md";
 
 /** Apollo cliente, GraphQL */
 import { ApolloClient, InMemoryCache, gql } from "apollo-boost";
@@ -85,19 +85,14 @@ class App extends React.Component {
         })
         .then(pages =>{
           pages = pages.data.allPages;
-          console.log('es aqui :', pages);
-          let homePage;
-
-          homePage = {
-            title: 'Homepage',
-            sections: [
-              {
-                content: this.linkFormatter(pages)
-              }
-            ],
-            renderedContent: this.linkFormatter(pages)
+          let homePage = { title: 'Homepage' };
+          if (!pages.length) {
+            homePage.renderedContent = 'No pages have been created';
+            homePage.noLinks = true;
+          } else {
+            homePage.renderedContent = this.linkFormatter(pages);
           }
-          
+
           this.setState({
             pages: [homePage],
             loadingPage: false
@@ -109,7 +104,6 @@ class App extends React.Component {
     
   showPage(e){
     e.preventDefault();
-    console.log(e.target.textContent);
     this.setState({loadingPage: true})
     this.state.client
     .query({
@@ -131,7 +125,7 @@ class App extends React.Component {
         pages,
         loadingPage: false
       }, (_this=this) => {
-        _this.pagesContainer.current.scrollTo(window.innerWidth, 0);
+        _this.pagesContainer.current.scrollTo(parseInt(Math.random().toString().substring(2, 10)), 0);
       });
     }).catch(e=>{
       this.setState({
@@ -163,13 +157,13 @@ class App extends React.Component {
       })
       .then(e => {
         var pages = this.stateAssignment(this.state.pages),
-            newLink = {content: "["+ this.state.pageData.title +"](#)", __typename: "Section"};
-
+            link = '- ['+ this.state.pageData.title +']()\n';
+        
         if (this.state.pages[0].noLinks) {
-          pages[0].sections = [newLink];
+          pages[0].renderedContent = link;
           pages[0].noLinks = false;
         } else {
-          pages[0].sections.push(newLink);
+          pages[0].renderedContent = pages[0].renderedContent + link;
         }
 
         this.setState({
@@ -306,7 +300,6 @@ class App extends React.Component {
         })
         .then(res => {
           var updatedPage = res.data.addSectionToPage;
-          console.log(updatedPage);
         });
 
       } else if (mode === 'addsb' || mode === 'addsa') {
@@ -349,7 +342,6 @@ class App extends React.Component {
         .then(res => {
           let updatedPage = res.data.addOrderedSectionToPage;
           updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
-
           pages.splice(pageData.position, 1, updatedPage);
 
           updatedPage.position = pageData.position;
@@ -389,7 +381,6 @@ class App extends React.Component {
           pageData.sections.splice(pos, 1, secitonUpdated);
           pageData.renderedContent = this.sectionContentFormatter(pageData.sections);
           pages.splice(pageData.position, 1, pageData);
-          console.log(pages[pageData.position]);
           state = {
             pageData,
             pages
@@ -408,8 +399,6 @@ class App extends React.Component {
 
       } else if (mode === 'addsb' || mode === 'addsa') {
         
-        
-
         if (mode === 'addsa') {
           let sectionsUpdate;
           sectionsUpdate = [section, ...pageData.sections];
@@ -560,7 +549,7 @@ class App extends React.Component {
           <div><div></div></div>
 
           <div>
-            <button onClick={this.createPage}>Create page</button>
+            <button onClick={this.createPage}><MdLibraryAdd /></button>
           </div>
 
           {this.state.loadingPage &&

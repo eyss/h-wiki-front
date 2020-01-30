@@ -42,10 +42,15 @@ div#container{
             align-items: center;
             justify-content: flex-end;
             > button {
-                @include buttonPropertys('normal', 130px, 33px);
+                @include buttonPropertys('normal', auto, auto);
+                padding: .3em .5em;
                 margin-right: 2em;
                 transition-duration: .5s;
                 font-size: 14px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 1.12em;
                 &:hover{
                     background-color: oPrimaryColor(.8);
                 }
