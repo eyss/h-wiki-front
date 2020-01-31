@@ -50,7 +50,7 @@ export const typeDefs = gql`
   }
 
   type User {
-    userName: String!
+    userName: ID!
     roles: [Role!]!
   }
 
