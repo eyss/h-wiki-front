@@ -1,17 +1,13 @@
 import React from 'react';
 import Page from './Page';
-import { connect } from '@holochain/hc-web-client';
 import Navbar from './Navbar';
 import Editor from './Editor';
 import PreviewSection from './PreviewSection';
 import { MdCreate, MdAdd, MdClose } from "react-icons/md";
-import { connect as reduxConnect } from 'react-redux';
+import { connect } from 'react-redux';
 /** Apollo cliente, GraphQL */
-import { ApolloClient, InMemoryCache, gql } from "apollo-boost";
-import { resolvers } from "../graphql/resolvers";
-import { typeDefs } from "../graphql/schema";
-import { SchemaLink } from "apollo-link-schema";
-import { makeExecutableSchema } from "graphql-tools";
+import { gql } from "apollo-boost";
+
 
 class Wiki extends React.Component {
     constructor(props) {
@@ -91,7 +87,7 @@ class Wiki extends React.Component {
     showPage(e){
       e.preventDefault();
       this.setState({loadingPage: true})
-      this.state.client
+      this.props.client
       .query({
         query: gql`
           {
@@ -127,7 +123,7 @@ class Wiki extends React.Component {
         preloaderMsg: 'storing page'
       });
 
-      this.state.client
+      this.props.client
         .mutate({
           mutation: gql`
             mutation CreatePageWithSections(
@@ -270,7 +266,7 @@ class Wiki extends React.Component {
         if (mode === 'addns') {
           this.setState({preloaderMsg: 'Adding section to the page'});
 
-          await this.state.client
+          await this.props.client
           .mutate({
             mutation: gql`
               mutation addSectionToPage(
@@ -296,7 +292,7 @@ class Wiki extends React.Component {
               sections.push(pageData.sections[i].id);
           }
 
-          await this.state.client
+          await this.props.client
           .mutate({
             mutation: gql`
               mutation addOrderedSectionToPage(
@@ -341,7 +337,7 @@ class Wiki extends React.Component {
         } else if (mode === 'edit') {
           this.setState({preloaderMsg: 'Updating section to the page'});
 
-          await this.state.client
+          await this.props.client
           .mutate({
             mutation: gql`
               mutation UpdateSection(
@@ -374,7 +370,7 @@ class Wiki extends React.Component {
           });
         }
 
-        await this.state.client.resetStore();
+        await this.props.client.resetStore();
 
       } else {
 
@@ -427,7 +423,7 @@ class Wiki extends React.Component {
           preloaderMsg: 'removing section'
         });
 
-        await this.state.client
+        await this.props.client
         .mutate({
           mutation: gql`
             mutation removeSection(
@@ -458,7 +454,7 @@ class Wiki extends React.Component {
         };
       }
 
-      await this.state.client.resetStore();
+      await this.props.client.resetStore();
 
       this.setState(state, (_this=this)=>{
         var _state = {alert: false};
@@ -681,7 +677,7 @@ function mapStateToProps(state) {
   }
 }
 
-export default reduxConnect(mapStateToProps, mapDispatchToProps)(Wiki)
+export default connect(mapStateToProps, mapDispatchToProps)(Wiki)
 
 
 
