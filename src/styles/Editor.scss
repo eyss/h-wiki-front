@@ -43,7 +43,7 @@ div#editor{
                 }
             }
         
-            >footer:last-child {
+            >footer {
                 height: 60px;
                 width: 100%;
                 display: flex;
@@ -65,6 +65,12 @@ div#editor{
                         }
                     }
                 }
+            }
+
+            >div.autocomplete-cont{
+                position: fixed;
+                background-color:limegreen;
+                z-index: 1;
             }
         }
     }

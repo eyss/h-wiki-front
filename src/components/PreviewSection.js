@@ -22,7 +22,6 @@ export default class PreviewSection extends React.Component {
     }
 
     showEditor = (mode) => {
-      console.log('Modo en Preview.js para mostrar el editor', mode);
       this.props.showEditor(mode, this.props.pos)
     }
 

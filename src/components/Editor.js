@@ -9,6 +9,8 @@ export default class Editor extends React.Component {
     super(props);
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
+
+    this.autocompleteCont = React.createRef();
   }
   
   componentDidMount() {
@@ -18,6 +20,14 @@ export default class Editor extends React.Component {
         e.preventDefault();
       }
     });
+
+    console.clear();
+    var elemento = this.editor.current.querySelector('#textarea'),
+        cordinates = elemento.getBoundingClientRect(),
+        { width, height, left, top } = cordinates,
+        style = `width: ${width}px; height: ${height}px; left: ${left}px; top: ${top}px;`;
+
+    this.autocompleteCont.current.setAttribute('style', style);
   }
 
   updatePageSections = () => {
@@ -50,7 +60,7 @@ export default class Editor extends React.Component {
       content = this.props.getContentSection(this.props.pos, this.props.mode).content;
       txtBtn = 'Update';
     }
-
+    var option = 'name page';
     return (
       <div id='editor'>
         <div>
@@ -71,6 +81,10 @@ export default class Editor extends React.Component {
                 <button onClick={this.updatePageSections}>{txtBtn}</button>
               </div>
             </footer>
+
+            <div className='autocomplete-cont' ref={this.autocompleteCont}>
+              
+            </div>
           </div>
         </div>
       </div>

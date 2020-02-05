@@ -3,11 +3,12 @@ import Page from './Page';
 import Navbar from './Navbar';
 import Editor from './Editor';
 import PreviewSection from './PreviewSection';
+import Alert from './Alert';
+
 import { MdCreate, MdAdd, MdClose } from "react-icons/md";
 import { connect } from 'react-redux';
 /** Apollo cliente, GraphQL */
 import { gql } from "apollo-boost";
-
 
 class Wiki extends React.Component {
     constructor(props) {
@@ -56,32 +57,31 @@ class Wiki extends React.Component {
     }
 
     componentDidMount() {
-        this.props.client
-          .query({
-            query: gql`
-              {
-                allPages {
-                  title
-                }
+      this.props.client
+        .query({
+          query: gql`
+            {
+              allPages {
+                title
               }
-            `
-          })
-          .then(pages =>{
-            pages = pages.data.allPages;
-            let homePage = { title: 'Homepage' };
-            if (!pages.length) {
-              homePage.renderedContent = 'No pages have been created';
-              homePage.noLinks = true;
-            } else {
-              homePage.renderedContent = this.linkFormatter(pages);
             }
-
-            this.setState({
-              pages: [homePage],
-              loadingPage: false
-            });
-          })
-          .catch(e => console.log("object", e));
+          `
+        })
+        .then(pages =>{
+          pages = pages.data.allPages;
+          let homePage = { title: 'Homepage' };
+          if (!pages.length) {
+            homePage.renderedContent = 'No pages have been created';
+            homePage.noLinks = true;
+          } else {
+            homePage.renderedContent = this.linkFormatter(pages);
+          }
+          this.setState({
+            pages: [homePage],
+            loadingPage: false
+          });
+        })
+        .catch(e => console.log("object", e));
     }
 
     showPage(e){
@@ -538,7 +538,9 @@ class Wiki extends React.Component {
                   return (
                     <div key={key} data-page={key}>
                       <div>
-                        {key !== 0 && <button onClick={e =>{this.showPageData(key)}}>
+                        {(key !== 0
+                          && this.props.userId.roles !== 'Reader')
+                          && <button onClick={e =>{this.showPageData(key)}}>
                           <MdCreate />
                         </button>}
                       </div>
@@ -547,7 +549,9 @@ class Wiki extends React.Component {
                   )
                 })}
             </div>
+            
             {this.state.loadingPage && <div className='blocker'></div>}
+            
           </section>
 
           {this.state.showPageManager &&
@@ -560,7 +564,8 @@ class Wiki extends React.Component {
                     </label>
                   </div>
                   <div>
-                    {this.state.existingPage &&
+                    {
+                      this.state.existingPage &&
                       <button onClick={this.closePageManager}>
                         <MdClose />
                       </button>
@@ -632,37 +637,23 @@ class Wiki extends React.Component {
             })
           }
 
-          {this.state.alert &&
-            <div id='alert'>
-              {this.state.confirmation &&
-                <div className='confirmation'>
-                  <div>
-                    <label>{this.state.confirmationMsg}</label>
-                  </div>
-                  <div>
-                    <button onClick={this.closeConfirmation}>No</button>
-                    <button onClick={this.processPageData}>Yes</button>
-                  </div>
-                </div>
-              }
+          <Alert 
+            alert = {this.state.alert}
+            
+            confirmation = {this.state.confirmation}
+            confirmationMsg = {this.state.confirmationMsg}
 
-              {this.state.preloader &&
-                <div className='preloader'>
-                  <div>
-                    <label>{this.state.preloaderMsg}</label>
-                  </div>
-                  <div>
-                    <div className='simple-preloader'></div>
-                  </div>
-                </div>
-              }
-            </div>
-          }
+            preloader = {this.state.preloader}
+            preloaderMsg = {this.state.preloaderMsg}
+            
+            process = {this.processPageData.bind(this)}
+            cancel = {this.closeConfirmation.bind(this)}
+          />
+          
         </div>
       )
     }
 }
-
 
 function mapDispatchToProps(dispatch) {
   return {
@@ -671,15 +662,10 @@ function mapDispatchToProps(dispatch) {
 }
 
 function mapStateToProps(state) {
-    console.log('Wiki comonent', state);
   return {
     client: state.client,
+    userId: state.userId
   }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Wiki)
-
-
-
-
-// export default Wiki;

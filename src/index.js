@@ -1,3 +1,4 @@
+import { gql } from 'apollo-boost';
 import { SchemaLink } from 'apollo-link-schema';
 import { InMemoryCache } from 'apollo-boost';
 import { ApolloClient } from 'apollo-boost';
@@ -13,29 +14,69 @@ import { createStore } from 'redux';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-async function boot() {
-    const store = createStore((state = { client: null }, action) => {
+async function start() {
+    let parameters = {
+      client: null,
+      userId: null
+    };
+
+    const store = createStore((state = parameters, action) => {
         switch (action.type) {
           case 'SET_CLIENT':
-            return { ...state, client: action.value }
-      
+            return {...state, client: action.value }
+          case 'SET_USERID':
+            return {...state, userId: action.value}
           default:
             return state
         }
       });
-      await connect({ url: "ws://192.168.1.63:3400" })
+      var client;
+      await connect({ url: "ws://192.168.1.63:3400"})
         .then((context) => {
           const schema = makeExecutableSchema({
             typeDefs,
             resolvers
           });
-          const client = new ApolloClient({
+          client = new ApolloClient({
             cache: new InMemoryCache(),
             link: new SchemaLink({ schema, context })
           });
+
           store.dispatch({
             type: 'SET_CLIENT',
             value: client
+          });
+        });
+
+      await client
+        .query({
+          query: gql`
+            {
+              getId {
+                userName
+                roles {
+                  name
+                }
+              }
+            }
+          `
+        })
+        .then(res => {
+          res = res.data.getId;
+          console.log(res);
+
+          let userId = {
+            userName : '',
+            roles: ['Reader']
+          };
+          console.log(res.userName.length);
+          if (res.userName.length > 0) {
+            userId = res;     
+          }
+          console.log(userId);
+          store.dispatch({
+            type: 'SET_USERID',
+            value: userId
           });
         });
 
@@ -46,7 +87,7 @@ async function boot() {
         , document.getElementById('root'));
 }
 
-boot();
+start();
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA

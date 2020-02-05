@@ -17,6 +17,7 @@ export const typeDefs = gql`
     page(title: String!): Page!
     homePage: Page!
     allPages: [Page!]!
+    getId: User!
   }
 
   input SectionInput {
@@ -51,7 +52,7 @@ export const typeDefs = gql`
 
   type User {
     userName: ID!
-    roles: [Role!]!
+    roles: Role!
   }
 
   extend type Mutation {

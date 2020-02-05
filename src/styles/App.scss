@@ -39,20 +39,100 @@ div.container{
         }
 
         > div:nth-child(2) {
-            align-items: center;
-            justify-content: flex-end;
-            > button {
-                @include buttonPropertys('normal', auto, auto);
-                padding: .3em .5em;
-                margin-right: 2em;
-                transition-duration: .5s;
-                font-size: 14px;
+            flex-direction: column;
+            position: relative;
+            >div{
                 display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 1.12em;
-                &:hover{
-                    background-color: oPrimaryColor(.8);
+                justify-content: flex-end;
+                height: 50%;
+            }
+            >div:first-child{
+                align-items: flex-start;
+                >ul{
+                    position: relative;
+                    display: flex;
+                    right: 11px;
+                    > li{
+                        list-style: none;
+                        background-color: transparent;
+                        position: relative;
+
+                        >button{
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            align-items: center;
+                            font-size: .83em;
+                            width: 100%;
+                            padding: .2em .6em;
+                            border: none;
+                            background-color: transparent;
+                            border-radius: .3em;
+                            transition: .5s;
+                            color: rgb(119, 119, 119);
+                            cursor: pointer;
+
+                            >svg{
+                                color: $primary-color;
+                                font-size: 1.3em;
+                            }
+
+                            >svg:not(.wiki){
+                                margin-right: .5em;
+                            }
+
+                            &:hover{
+                                background-color: oPrimaryColor(.1);
+                            }
+                            &:focus{
+                                outline: 0;
+                            }
+                        }
+                        &:not(:first-child){
+                            margin-left: 19px;
+                            &:after{
+                                content: '';
+                                position: absolute;
+                                width: 1px;
+                                height: 50%;
+                                top: 25%;
+                                background-color: $primary-color;
+                                left: -10px;
+                            }
+                        }
+                    }
+                }
+            }   
+            >div:last-child{
+                align-items: flex-end;
+                >button.btn-createpage{
+                    height: 85%;
+                    display: flex;
+                    align-items: center;
+                    font-size: .85em;
+                    padding: 0 .5em;
+                    
+                    border-radius: .3em;
+                    
+                    position: relative;
+                    bottom: 2px;
+                    right: calc(7.968px + 10px);
+                    cursor: pointer;
+                    color: #FFFFFF;
+                    background-color: $primary-color;
+                    border:none;
+                    border: 1px solid $primary-color;
+                    border: {
+                        top:none;
+                        bottom:none;
+                    };
+                    >svg{
+                        margin-right: .5em;
+                    }
+
+                    &:focus{
+                        outline: 0;
+                    }
                 }
             }
         }
@@ -74,6 +154,9 @@ div.container{
         position: relative;
     }
 
+    /**
+     * HOMEPAGE
+     */
     > section.pages-container{
 
        > div{
@@ -187,6 +270,9 @@ div.container{
         }
     }
 
+    /**
+     * User registry
+     */
     > section.user-registry-container{
         display: flex;
         justify-content: center;
@@ -269,6 +355,186 @@ div.container{
             }
         }
     }
+
+    /**
+     * Roles managment
+     */
+    >section.roles-managment-container{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        >div{
+            width:750px;
+            height: 90%;
+            background-color: #FAFAFA;
+            box-sizing: border-box;
+            padding: 1em 0;
+            border-radius: .5em;
+            display: flex;
+            flex-direction: column;
+
+            >header{
+                display: flex;
+                align-items: center;
+                height: 10%;
+                box-sizing: border-box;
+                padding: 0 1em;
+
+                >label{
+                    display: flex;
+                    align-items: center;
+                    position: relative;
+                    top: -10px;
+                    color: rgb(73, 73, 73);
+                    font-size: 1.1em;
+                    font-weight: bold;
+                    >svg {
+                        margin-right: .2em;
+                        font-size: 1.35em;
+                    }
+                }
+            }
+
+            >section{
+                display:flex;
+                flex-direction: column;
+                height: 100%;
+
+                >div:first-child{
+                    position: relative;
+                    box-sizing: border-box;
+                    padding: 0 1em;
+
+                    >form{
+                        display: flex;
+                        justify-content: space-between;
+                        >div{
+                            display: flex;
+                            
+                            &:first-child{
+                                width: 100%;
+                            }
+                            &:nth-child(2){
+                                padding: 0 .5em;
+                                width: calc(50% - 5px);
+                            }
+                            &:nth-child(3){
+                                width: 45%;
+                            }
+
+                            >select, input{
+                                background-color: #FFFFFF;
+                                border-radius: .5em;
+                                border: 1px solid rgba(70, 70, 70, .3);
+                                &::placeholder{ color: rgb(124, 124, 124); }
+                                &:focus{
+                                    outline: 0;
+                                    box-shadow: 0 0 0 1px oPrimaryColor(.4);
+                                }
+                            }
+
+                            >button{
+                                @include buttonPropertys('normal');
+                            }
+
+                            >input, >select, >button{
+                                margin: 0;
+                                padding: 0;
+                                width: 100%;
+                                padding: .55em;
+                                border-radius: .3em;
+                                font-size: .86em!important;
+                                &:focus{
+                                    outline: 0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                >div:last-child{
+                    height: 100%;
+                    display:flex;
+                    flex-direction: column;
+
+                    // Content label for result and eraser button
+                    >div:first-child{
+
+                        position: relative;
+                        z-index: 1000;
+                        padding: 1.2em 0 .5em;
+                        display: flex;
+                        box-shadow: rgba(128,128,128, .1) 0px 3px 2px;
+
+                        >div{width: 50%;}
+
+                        >div:first-child{
+                            padding-left: .5em;
+                            >label{
+                                font-size: .9em;
+                                color: #4e4e4e;
+                                font-weight: bold;
+                            }
+                        }
+
+                        >div:last-child{
+                            display: flex;
+                            justify-content: flex-end;
+                            >button{
+                                padding: 0;
+                                margin: 0;
+                                border: none;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                font-size: 1.3em;
+                                background-color: transparent;
+                                color: #ff0000;
+                                font-weight: bold;
+                                cursor: pointer;
+                                position: relative;
+                                right: .5em;
+                                &:focus{
+                                    outline: 0;
+                                }
+                            }
+                        }
+                    }
+                    //Result content
+                    >div:last-child{
+                        position: relative;
+                        z-index: 500;
+                        height: 100%;
+                        overflow-x:hidden;
+                        overflow-y: auto;
+                        li {
+                            color: #666666;
+                            list-style: none;
+                            font-size: 1em;
+                            cursor: pointer;
+                            padding: 1em 1.2em;
+                            border-radius: .2em;
+
+                            >span{
+                                padding-top: .285em;
+                                display: block;
+                                font-size: .8em;
+                            }
+                            &:not(:last-child){
+                                border-bottom: 1px solid rgba(128,128,128, .2);
+                            }
+
+                            &:hover{
+                                background-color: rgba(221, 221, 221, 0.1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 

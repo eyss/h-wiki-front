@@ -1,15 +1,15 @@
-$primary-color: #4baf81;
+$primary-color: #5db68e;
 $bg1 : #F0F1F4;
 $bg2 : #FAFAFA;
 
 @function oPrimaryColor($opacity) {
-    @return rgba(75,175,129, $opacity);
+    @return rgba(93,182,142, $opacity);
 }
 
 *{ margin: 0; padding: 0; }
 
 textarea::-webkit-scrollbar,
-div::-webkit-scrollbar{ width: 8px; height: 13px; }
+div::-webkit-scrollbar{ width: 8px; height: 8px; }
 textarea::-webkit-scrollbar-track,
 div::-webkit-scrollbar-track{ background: #f5f5f5; border-radius: 2em; }
 textarea::-webkit-scrollbar-thumb,
@@ -207,6 +207,7 @@ div.simple-preloader{
 	}
 }
 
+span[title='Underline']{ display: none!important; }
 
 // To page and preview section
 div.preview-section,

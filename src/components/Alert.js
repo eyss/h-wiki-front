@@ -1,0 +1,45 @@
+import React, {Fragment} from 'react';
+
+class Alert extends React.Component {
+    constructor(props) {
+        super(props);
+        console.log(this.props);
+        
+        
+    }
+
+    render(){
+        return(
+            <Fragment>
+            {this.props.alert &&
+                <div id='alert'>
+                  {this.props.confirmation &&
+                    <div className='confirmation'>
+                      <div>
+                        <label>{this.props.confirmationMsg}</label>
+                      </div>
+                      <div>
+                        <button onClick={this.props.cancel}>No</button>
+                        <button onClick={this.props.process}>Yes</button>
+                      </div>
+                    </div>
+                  }
+    
+                  {this.props.preloader &&
+                    <div className='preloader'>
+                      <div>
+                        <label>{this.props.preloaderMsg}</label>
+                      </div>
+                      <div>
+                        <div className='simple-preloader'></div>
+                      </div>
+                    </div>
+                  }
+                </div>
+            }
+            </Fragment>
+        );
+    }
+}
+
+export default Alert;
