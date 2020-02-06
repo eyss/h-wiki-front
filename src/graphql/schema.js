@@ -46,13 +46,12 @@ export const typeDefs = gql`
   }
 
   extend type Query {
-    allRoles: [Role!]!
     allUsers: [User!]!
   }
 
   type User {
     userName: ID!
-    roles: Role!
+    role: String!
   }
 
   extend type Mutation {

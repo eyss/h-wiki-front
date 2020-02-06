@@ -14,7 +14,11 @@ class RolesManagement extends React.Component {
     render() {
       return (
         <div className='container'>
-          <Navbar  />
+          <Navbar 
+            page='user-managment'
+            role={this.props.userId.role}
+            userName={this.props.userId.userName}
+          />
           <section className="roles-managment-container">
             <div>
 
@@ -31,7 +35,7 @@ class RolesManagement extends React.Component {
                     
                     <div>
                       <select>
-                        <option defaultValue value="">User rol</option>
+                        <option defaultValue value="">Select role</option>
                         <option value="">Administrator</option>
                         <option value="">Editor</option>
                         <option value="">Reader</option>
@@ -102,11 +106,11 @@ class RolesManagement extends React.Component {
     }
   }
     
-  function mapStateToProps(state) {
-    console.log(state);
-    return {
-      client: state.client,
-    }
+ function mapStateToProps(state) {
+  return {
+    client: state.client,
+    userId: state.userId
   }
-    
-  export default connect(mapStateToProps, mapDispatchToProps)(RolesManagement)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(RolesManagement)

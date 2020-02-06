@@ -28,18 +28,6 @@ export const resolvers = {
         }
       });
     },
-    allRoles(_, __, { callZome }) {
-      return callZome('__H_Wiki', 'wiki', 'get_all_roles')
-      ({})
-        .then(page => {
-          page = JSON.parse(page);
-          if (page.Ok) {
-            return page.Ok;
-          } else {
-            return [];
-          }
-        });
-    },
     getId(_,__,{ callZome }) {
       return callZome('__H_Wiki', 'wiki', 'get_username')
         ({})
@@ -56,7 +44,7 @@ export const resolvers = {
   },
   User: {
     userName: userName => userName,
-    roles(user_name, __, { callZome }) {
+    role(user_name, __, { callZome }) {
       return callZome('__H_Wiki', 'wiki', 'get_agent_user')
       ({ user_name })
         .then(page => {
@@ -65,14 +53,14 @@ export const resolvers = {
             return callZome('__H_Wiki', 'wiki', 'get_agent_roles'
             )({ agent_address: page.Ok }).then((roles) => {
               roles = JSON.parse(roles).Ok;
-              return roles;
+              return roles.role_name;
             });
           } else {
             throw new Error(page.Err);
           }
         })
         .catch((e) => {
-          return [];
+          return 'Reader'
         });
     }
   },

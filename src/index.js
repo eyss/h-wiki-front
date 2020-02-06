@@ -54,26 +54,21 @@ async function start() {
             {
               getId {
                 userName
-                roles {
-                  name
-                }
+                role
               }
             }
           `
         })
         .then(res => {
           res = res.data.getId;
-          console.log(res);
-
           let userId = {
             userName : '',
-            roles: ['Reader']
+            role: 'Reader'
           };
-          console.log(res.userName.length);
+          // If user is recived
           if (res.userName.length > 0) {
             userId = res;     
           }
-          console.log(userId);
           store.dispatch({
             type: 'SET_USERID',
             value: userId

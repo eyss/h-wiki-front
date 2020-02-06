@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 /** Apollo cliente, GraphQL */
 import { gql } from "apollo-boost";
 
-class UserRegistry extends React.Component {
+class SignUp extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -22,7 +22,8 @@ class UserRegistry extends React.Component {
   }
 
   componentDidMount() {
-    this.setState({loadingPage: false})
+    this.setState({loadingPage: false});
+    console.log('props Sign up', this.props);
   }
 
   setUsername = (e) => {
@@ -78,6 +79,9 @@ class UserRegistry extends React.Component {
       <div className='container'>
         <Navbar 
           loadingPage={this.state.loadingPage}
+          page='sign-up'
+          role={this.props.userId.role}
+          userName={this.props.userId.userName}
         />
         <section className="user-registry-container">
           <div>
@@ -124,7 +128,6 @@ class UserRegistry extends React.Component {
 function mapDispatchToProps(dispatch) {
   return {
     pepito: function(val) {
-      console.log('funcion pepito');
       dispatch({
         type: 'SET_PEPITO',
         value: val
@@ -132,12 +135,12 @@ function mapDispatchToProps(dispatch) {
     }
   }
 }
-  
+
 function mapStateToProps(state) {
-  console.log(state);
   return {
     client: state.client,
+    userId: state.userId
   }
 }
   
-export default connect(mapStateToProps, mapDispatchToProps)(UserRegistry)
+export default connect(mapStateToProps, mapDispatchToProps)(SignUp)

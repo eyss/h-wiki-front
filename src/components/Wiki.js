@@ -530,6 +530,9 @@ class Wiki extends React.Component {
           <Navbar
             createPage={this.createPage.bind(this)}
             loadingPage={this.state.loadingPage}
+            page='wiki'
+            role={this.props.userId.role}
+            userName={this.props.userId.userName}
           />
 
           <section className="pages-container" ref={this.pagesContainer}>
@@ -657,7 +660,6 @@ class Wiki extends React.Component {
 
 function mapDispatchToProps(dispatch) {
   return {
-    
   }
 }
 

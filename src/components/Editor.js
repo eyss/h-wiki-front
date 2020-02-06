@@ -1,33 +1,47 @@
 import React from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
+import { MdClose, MdFindInPage, MdPersonPin } from 'react-icons/md';
 
 export default class Editor extends React.Component {
   mdEditor = null;
   mdParser = null;
   constructor(props) {
     super(props);
+    this.state = {
+      displayAC: 'hidden',
+      searchAlt: 'page',
+      textarea: undefined
+    };
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
 
     this.autocompleteCont = React.createRef();
+    this.input = React.createRef();
   }
   
   componentDidMount() {
-    this.editor.current
-    .addEventListener('click', (e)=>{
-      if (e.target.nodeName === 'A') {
-        e.preventDefault();
-      }
+    const editor = this.editor.current;
+
+    editor.addEventListener('click', (e)=>{
+      if (e.target.nodeName === 'A') { e.preventDefault(); }
     });
 
-    console.clear();
-    var elemento = this.editor.current.querySelector('#textarea'),
-        cordinates = elemento.getBoundingClientRect(),
-        { width, height, left, top } = cordinates,
-        style = `width: ${width}px; height: ${height}px; left: ${left}px; top: ${top}px;`;
+    this.setStyleAutoComplete();
+    window.addEventListener('resize', ()=>{ this.setStyleAutoComplete(); });
+    
+    const textarea = editor.querySelector('#textarea');
+    this.setState({ textarea: textarea });
 
-    this.autocompleteCont.current.setAttribute('style', style);
+    textarea.addEventListener('keyup', (e)=>{
+      let str = e.target.value,
+          l = str.length,
+          lastChar = str.substr((l-1), l);
+            
+      if (lastChar === '/' || lastChar === '@') {
+        this.showAutoComplete(lastChar === '/' ? 'page': 'username')
+      }
+    });
   }
 
   updatePageSections = () => {
@@ -53,6 +67,34 @@ export default class Editor extends React.Component {
     this.props.closeEditor();
   }
 
+  setStyleAutoComplete(){
+    const textarea = this.editor.current.querySelector('#textarea'),
+        cordinates = textarea.getBoundingClientRect(),
+        { width, height, left, top } = cordinates,
+        style = `width: ${width}px; height: ${height}px; left: ${left}px; top: ${top}px;`;
+
+    this.autocompleteCont
+      .current.setAttribute('style', style);
+  }
+
+  showAutoComplete(alt) {
+    console.log(alt);
+    this.setState({
+      searchAlt: alt,
+      displayAC: 'show'
+    }, (_this = this) =>{
+      _this.input.current.focus();
+    });
+  }
+
+  closeAutoComplete = ()=> {
+    this.setState({
+      displayAC: 'hidden'
+    }, (_this = this)=>{
+      _this.state.textarea.focus();
+    });
+  }
+
   render() {
     
     var content = '', txtBtn = 'Save';
@@ -60,7 +102,6 @@ export default class Editor extends React.Component {
       content = this.props.getContentSection(this.props.pos, this.props.mode).content;
       txtBtn = 'Update';
     }
-    var option = 'name page';
     return (
       <div id='editor'>
         <div>
@@ -82,9 +123,83 @@ export default class Editor extends React.Component {
               </div>
             </footer>
 
-            <div className='autocomplete-cont' ref={this.autocompleteCont}>
-              
+            <div className={'autocomplete-cont ' + this.state.displayAC} ref={this.autocompleteCont}>
+              <div>
+                <div>
+                  <div>
+                    <button onClick={this.closeAutoComplete}>
+                      <MdClose />
+                    </button>
+                  </div>
+                  <div>
+                    <div>
+                      {
+                        this.state.searchAlt === 'page' ?
+                        <MdFindInPage /> : 
+                        <MdPersonPin />
+                      }
+                    </div>
+                    <input
+                      placeholder={`Insert ${this.state.searchAlt}`}
+                      ref={this.input}
+                    />
+                  </div>
+                  <div>
+                    <ul>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                      <li>a page</li>
+                    </ul>
+                  </div>
+                </div> 
+              </div>
             </div>
+
           </div>
         </div>
       </div>

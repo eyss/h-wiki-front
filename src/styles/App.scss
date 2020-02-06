@@ -57,19 +57,20 @@ div.container{
                         background-color: transparent;
                         position: relative;
 
-                        >button{
+                        >a{
                             margin: 0;
                             padding: 0;
                             display: flex;
                             align-items: center;
                             font-size: .83em;
                             width: 100%;
-                            padding: .2em .6em;
                             border: none;
                             background-color: transparent;
                             border-radius: .3em;
                             transition: .5s;
                             color: rgb(119, 119, 119);
+                            text-decoration: none;
+                            padding: .2em .1em .2em .4em;
                             cursor: pointer;
 
                             >svg{
@@ -129,10 +130,17 @@ div.container{
                     >svg{
                         margin-right: .5em;
                     }
-
                     &:focus{
                         outline: 0;
                     }
+                }
+            }
+
+            >div.only-menu{
+                height: 100%!important;
+                align-items: center;
+                & + div{
+                    display: none;
                 }
             }
         }

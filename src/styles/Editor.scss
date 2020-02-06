@@ -69,8 +69,112 @@ div#editor{
 
             >div.autocomplete-cont{
                 position: fixed;
-                background-color:limegreen;
+                background-color:rgba(0,0,0, .25);
                 z-index: 1;
+                //Container
+                >div{
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100%;
+                    width: 100%;
+                    >div{
+                        height: 85%;
+                        box-sizing: border-box;
+                        padding: 0 .6em .6em;
+                        background-color: #FAFAFA;;
+                        border-radius: .3em;
+                        width: 65%;
+                        display: flex;
+                        flex-direction: column;
+                        
+                        >div:first-child{
+                            display: flex;
+                            justify-content: flex-end;
+                            padding: .4em 0 .3em;
+                            >button{
+                                padding: 0;
+                                margin: 0;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                border: none;
+                                background-color: transparent;
+                                >svg{
+                                    color: #4b4b4b;
+                                    transition: .5s;
+                                    cursor: pointer;
+                                }
+                                &:hover > svg {
+                                    color: #FF0000;
+                                }
+                                &:focus{
+                                    outline: 0;
+                                }
+                            }
+                        }
+
+                        >div:nth-child(2){
+                            display: flex;
+                            flex-wrap: nowrap;
+                            >div{
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                padding: 0 .5em;
+                                background-color: rgb(241, 241, 241);
+
+                                border-top-left-radius: .3em;
+                                border-bottom-left-radius: .3em;
+                                >svg{
+                                    font-size: 1.3em;
+                                    color: grey;
+                                }
+                            }
+                            >input{
+                                display: block;
+                                border:none;
+                                padding: 0;
+                                margin:0;
+                                width: 100%;
+                                font-size: .9em;
+                                padding: .84em .6em;
+                                box-sizing: border-box;
+                                border-top-right-radius: .3em;
+                                border-bottom-right-radius: .3em;
+                                color: #4b4b4b;
+                                &:focus{
+                                    outline: 0;
+                                }
+                            }
+                        }
+                        >div:nth-child(3){
+                            height: 100%;
+                            overflow-y: auto;
+                            >ul{
+                                >li{
+                                    padding: .85em 0;
+                                    font-size: .93em;
+                                    color: #3d3d3d;
+                                    list-style-type: none;
+                                    border-bottom: 1px solid rgba(122, 122, 122, .2);
+                                    text-indent: 1em;
+                                    cursor: pointer;
+                                    &:hover{
+                                        background-color: rgba(122, 122, 122, .1);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .hidden{
+                display: none!important;
+            }
+            .show{
+                display: block!important;
             }
         }
     }
