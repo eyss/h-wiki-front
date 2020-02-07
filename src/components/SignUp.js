@@ -5,6 +5,7 @@ import {MdPerson} from 'react-icons/md';
 import { connect } from 'react-redux';
 /** Apollo cliente, GraphQL */
 import { gql } from "apollo-boost";
+import {Redirect} from 'react-router-dom';
 
 class SignUp extends React.Component {
   constructor(props) {
@@ -22,8 +23,7 @@ class SignUp extends React.Component {
   }
 
   componentDidMount() {
-    this.setState({loadingPage: false});
-    console.log('props Sign up', this.props);
+    this.setState({loadingPage: false});    
   }
 
   setUsername = (e) => {
@@ -48,30 +48,22 @@ class SignUp extends React.Component {
         mutation createUser($name: String!) {
           createUser(name: $name) {
             userName
-            roles {
-              name
-            }
+            role
            }
         }
       `,
       variables: {
         name: this.state.username
       }
-    })
-    .then(res => {
-      console.log(res.data);
-    })
-    .catch(err => {
+    }).then(res => {
+      this.props.setUserId(res.data.createUser);
+    }).catch(err => {
       console.log(err);
-    })
-    .finally(e => {
-      this.setState({
-        preloader: false,
-        alert: false,
-        preloaderMsg: '',
-        username: ''
-    }, () => this.username.current.focus());
-    })
+    }).finally(e => {
+      return (
+        <Redirect to="/" />
+      );
+    });
   }
 
   render() {
@@ -127,13 +119,13 @@ class SignUp extends React.Component {
   
 function mapDispatchToProps(dispatch) {
   return {
-    pepito: function(val) {
+    setUserId: (userId) =>{
       dispatch({
-        type: 'SET_PEPITO',
-        value: val
-      })
+        type: 'SET_USERID',
+        value: userId
+      });
     }
-  }
+  };
 }
 
 function mapStateToProps(state) {

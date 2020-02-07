@@ -2,16 +2,22 @@ import React from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
 import { MdClose, MdFindInPage, MdPersonPin } from 'react-icons/md';
+import { connect } from 'react-redux';
+import { gql } from "apollo-boost";
 
-export default class Editor extends React.Component {
+
+class Editor extends React.Component {
   mdEditor = null;
   mdParser = null;
   constructor(props) {
     super(props);
     this.state = {
+      data: '',
+      content: '',
       displayAC: 'hidden',
       searchAlt: 'page',
-      textarea: undefined
+      textarea: undefined,
+      matchs: []
     };
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
@@ -21,6 +27,12 @@ export default class Editor extends React.Component {
   }
   
   componentDidMount() {
+    if (this.props.mode === 'edit' ) {
+      this.setState({
+        content: this.props.getContentSection(this.props.pos, this.props.mode).content 
+      });
+    }
+
     const editor = this.editor.current;
 
     editor.addEventListener('click', (e)=>{
@@ -37,8 +49,8 @@ export default class Editor extends React.Component {
       let str = e.target.value,
           l = str.length,
           lastChar = str.substr((l-1), l);
-            
-      if (lastChar === '/' || lastChar === '@') {
+
+      if ((lastChar === '/' || lastChar === '@') && !((e.keyCode>= 37 && e.keyCode <= 40) || (e.keyCode === 8))) {
         this.showAutoComplete(lastChar === '/' ? 'page': 'username')
       }
     });
@@ -81,7 +93,9 @@ export default class Editor extends React.Component {
     console.log(alt);
     this.setState({
       searchAlt: alt,
-      displayAC: 'show'
+      displayAC: 'show',
+      data: '',
+      matchs: []
     }, (_this = this) =>{
       _this.input.current.focus();
     });
@@ -95,13 +109,59 @@ export default class Editor extends React.Component {
     });
   }
 
-  render() {
+  setRefContent = (e) => {
+    var textarea = this.state.textarea,
+      content = textarea.value,
+      l = content.length,
+      ref = `[${e.target.textContent}]() `,
+      bfstr;
+
+    content = content.substr(0, (l-1));
+
+    bfstr = /\n$/.test(content) ? '\n' : '';
     
-    var content = '', txtBtn = 'Save';
-    if (this.props.mode === 'edit') {
-      content = this.props.getContentSection(this.props.pos, this.props.mode).content;
-      txtBtn = 'Update';
+    if (this.state.searchAlt !== 'page') {
+      ref = `**@${e.target.textContent}** `;
     }
+    
+    content = content + bfstr + ref;
+
+    this.setState({ content },
+      (_this = this) => {
+        _this.closeAutoComplete();
+      }
+    );
+  }
+
+  setData = (e) => {
+    this.setState({
+      data: e.target.value
+    }, (data=this.state.data)=>{
+      let fn = this.state.searchAlt === 'page' ?
+              `getPageTitle(title:"${data}") ` :
+              `getUsername(username:"${data}")`;
+
+      if (data.length>=3) {
+        this.props.client
+        .query({
+          query: gql`
+            {
+              ${fn}
+            }
+          `
+        }).then(m => {
+          let matchs = m.data.getPageTitle || m.data.getUsername;
+          this.setState({
+            matchs
+          });
+        })
+      }
+    });
+  }
+
+  render() {
+    let txtBtn = this.props.mode === 'edit' ? 'Update' : 'Save';
+
     return (
       <div id='editor'>
         <div>
@@ -112,7 +172,7 @@ export default class Editor extends React.Component {
             <div ref={this.editor}>
               <MdEditor
                 ref={node => this.mdEditor = node}  
-                value={content}
+                value={this.state.content}
                 renderHTML={(text) => this.mdParser.render(text)}
               />
             </div>
@@ -142,58 +202,19 @@ export default class Editor extends React.Component {
                     <input
                       placeholder={`Insert ${this.state.searchAlt}`}
                       ref={this.input}
+                      value={this.state.data}
+                      onChange={this.setData}
                     />
                   </div>
                   <div>
                     <ul>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
-                      <li>a page</li>
+                      {
+                        this.state.matchs.map((val, key) =>{
+                          return (
+                            <li onClick={this.setRefContent} key={key}>{val}</li>
+                          )
+                        })
+                      }
                     </ul>
                   </div>
                 </div> 
@@ -203,7 +224,19 @@ export default class Editor extends React.Component {
           </div>
         </div>
       </div>
-        
     )
   }
 }
+
+function mapDispatchToProps(dispatch) {
+  return {};
+}
+
+function mapStateToProps(state) {
+  return {
+    client: state.client,
+    userId: state.userId
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Editor)

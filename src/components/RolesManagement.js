@@ -94,19 +94,11 @@ class RolesManagement extends React.Component {
     }
   }
   
-  function mapDispatchToProps(dispatch) {
-    return {
-      pepito: function(val) {
-        console.log('funcion pepito');
-        dispatch({
-          type: 'SET_PEPITO',
-          value: val
-        })
-      }
-    }
-  }
+function mapDispatchToProps(dispatch) {
+  return {};
+}
     
- function mapStateToProps(state) {
+function mapStateToProps(state) {
   return {
     client: state.client,
     userId: state.userId

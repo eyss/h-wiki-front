@@ -40,7 +40,21 @@ export const resolvers = {
             return  ""
           }
         });
-    }
+    },
+    getPageTitle(_,{title}, {callZome}) {
+      return callZome('__H_Wiki', 'wiki', 'get_titles_filtered')
+        ({data: title})
+        .then(titles => {
+          return JSON.parse(titles).Ok
+        });
+    },
+    getUsername(_,{username}, {callZome}) {
+      return callZome('__H_Wiki', 'wiki', 'get_users')
+        ({data: username})
+        .then(usernames => {
+          return JSON.parse(usernames).Ok
+        });
+    },
   },
   User: {
     userName: userName => userName,

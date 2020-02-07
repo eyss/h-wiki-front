@@ -18,6 +18,8 @@ export const typeDefs = gql`
     homePage: Page!
     allPages: [Page!]!
     getId: User!
+    getPageTitle(title: String!): [String!]!
+    getUsername(username: String!): [String!]!
   }
 
   input SectionInput {

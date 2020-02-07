@@ -659,8 +659,7 @@ class Wiki extends React.Component {
 }
 
 function mapDispatchToProps(dispatch) {
-  return {
-  }
+  return {};
 }
 
 function mapStateToProps(state) {

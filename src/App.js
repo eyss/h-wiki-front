@@ -42,14 +42,7 @@ function App(props) {
 }
 
 function mapDispatchToProps(dispatch) {
-  return {
-    pepito: function(val) {
-      dispatch({
-        type: 'SET_PEPITO',
-        value: val
-      })
-    }
-  }
+  return {};
 }
 
 function mapStateToProps(state) {
