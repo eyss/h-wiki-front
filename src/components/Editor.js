@@ -167,7 +167,23 @@ class Editor extends React.Component {
         <div>
           <div id="rmel-container">
             <header>
-              <label>Markdown editor</label>
+              <div>
+                <label>Content section</label>
+              </div>
+              <div>
+                <div>
+                  <label>Content type:</label>
+                </div>
+                <div>
+                  <select>
+                    <option>Text</option>
+                    <option>Image</option>
+                    <option disabled>SVG</option>
+                    <option disabled>Video</option>
+                    <option disabled>File</option>
+                  </select>
+                </div>
+              </div>
             </header>
             <div ref={this.editor}>
               <MdEditor

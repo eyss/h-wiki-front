@@ -19,11 +19,65 @@ div#editor{
                 height: 50px;
                 background: #FAFAFA;
                 display: flex;
-                align-items: center;
-                >label {
-                    color: rgb(122, 122, 122);
-                    font-size: 15px;
-                    text-indent: .8em;
+                
+                >div{
+                    width: 50%;
+
+                    &:first-child{
+                        display: flex;
+                        align-items: center;
+                        >label{
+                            text-indent: 1em;
+                            color: #626262;
+                            font-size: 15px;
+                        }
+                    }
+
+                    &:last-child{
+                        display: flex;
+                        justify-content: flex-end;
+                        >div:first-child{
+                            display: flex;
+                            align-items: center;
+                            >label {
+                                margin-right: .4em;
+                                color: #626262;
+                                font-size: 12px;
+                                text-indent: .8em;
+                            }
+                        }
+                        >div:last-child{
+                            padding: 0;
+                            margin:0;
+                            overflow: hidden;
+                            position: relative;
+
+                            &:before{
+                                content: '';
+                                position: absolute;
+                                top: 35%;
+                                height: 30%;
+                                width: 1px;
+                                background-color: rgb(153, 153, 153);
+                            }
+
+                            >select{
+                                padding: 0 1.5em;
+                                margin:0;
+                                overflow: hidden;
+                                height: 100%;
+
+                                border-top-right-radius: .5em;
+                                font-size: 12px;
+                                background: #FAFAFA;
+                                border: 0;
+                                
+                                &:focus{
+                                    outline: 0;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         
@@ -32,7 +86,8 @@ div#editor{
         
                 >div.rc-md-editor {
                     >div:first-child.rc-md-navigation{
-                        background-color: #FAFAFA;
+                        background-color: rgb(255, 255, 255);
+                        border-color: #f3f3f3;
                     }
 
                     >div.editor-container
@@ -44,7 +99,7 @@ div#editor{
             }
         
             >footer {
-                height: 60px;
+                height: 55px;
                 width: 100%;
                 display: flex;
                 justify-content: flex-end;
