@@ -168,8 +168,11 @@ div#editor{
                                     justify-content: center;
                                     position: relative;
                                     z-index: 200;
+                                    >img{
+                                        width: 95%;
+                                    }
                                 }
-                                
+
                                 &:last-child{
                                     height: 100%;
                                     position: absolute;

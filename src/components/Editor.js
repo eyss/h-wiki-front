@@ -1,9 +1,11 @@
+/* eslint-disable jsx-a11y/alt-text */
 import React from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
 import { MdClose, MdFindInPage, MdPersonPin, MdImage, MdFileUpload } from 'react-icons/md';
 import { connect } from 'react-redux';
 import { gql } from "apollo-boost";
+import Compress from 'compress.js'
 
 
 class Editor extends React.Component {
@@ -18,13 +20,16 @@ class Editor extends React.Component {
       searchAlt: 'page',
       textarea: undefined,
       matchs: [],
-      dataType: 'Text'
+      dataType: 'Text',
+      image: '',
+
     };
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
 
     this.autocompleteCont = React.createRef();
     this.input = React.createRef();
+    this.imageUploader = React.createRef();
   }
   
   componentDidMount() {
@@ -58,19 +63,24 @@ class Editor extends React.Component {
   }
 
   updatePageSections = () => {
+
+    const content = this.state.dataType === 'Text' ?
+                    this.mdEditor.getMdValue() : 
+                    `![](${this.state.image})`;
+
    if (this.props.mode === 'edit') {
       this.props.showConfirmation({
         process: 'update',
         pos: this.props.pos,
         mode: this.props.mode,
-        content: this.mdEditor.getMdValue(),
+        content: content,
         currentSection: this.props.getContentSection(this.props.pos, this.props.mode)
       });
     } else {
       this.props.updatePageSections(
         this.props.mode,
         this.props.pos,
-        this.mdEditor.getMdValue(),
+        content,
         this.props.getContentSection(this.props.pos, this.props.mode)
       );
     }
@@ -169,6 +179,25 @@ class Editor extends React.Component {
     });
   }
 
+  upLoadImage = (evt) => {
+    const compress = new Compress();
+
+    const files = [...evt.target.files];
+
+    compress.compress(files, {
+      size: 4,
+      quality: 0.75,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      resize: true
+    }).then((data) => {
+      const image = data[0].prefix + data[0].data;
+      this.setState({
+        image
+      });
+    })
+  }
+
   render() {
     let txtBtn = this.props.mode === 'edit' ? 'Update' : 'Save';
 
@@ -211,17 +240,25 @@ class Editor extends React.Component {
                 <div className='hw-uploadImage-container'>
 
                   <div>
-                    <button><MdFileUpload /> Upload image</button>
-                    <input hidden type="file" name="" id="upload" accept="image/*" />
+
+                    <button onClick={ e => { this.imageUploader.current.click() }}>
+                      <MdFileUpload /> Upload image
+                    </button>
+
+                    <input
+                      hidden
+                      type="file"
+                      name=""
+                      id="upload"
+                      accept="image/*"
+                      ref={this.imageUploader}
+                      onChange={e => { this.upLoadImage(e) }}
+                    />
                   </div>
 
                   <div>
                     <div>
-                      <img 
-                        src="https://holo.host//wp-content/uploads/illustration-holodots.png"
-                        width='300'
-                        height='150'
-                      />
+                      <img src={this.state.image} />
                     </div>
                     <div>
                       <MdImage />
