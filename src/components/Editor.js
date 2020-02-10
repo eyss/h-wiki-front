@@ -1,7 +1,7 @@
 import React from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
-import { MdClose, MdFindInPage, MdPersonPin } from 'react-icons/md';
+import { MdClose, MdFindInPage, MdPersonPin, MdImage, MdFileUpload } from 'react-icons/md';
 import { connect } from 'react-redux';
 import { gql } from "apollo-boost";
 
@@ -17,7 +17,8 @@ class Editor extends React.Component {
       displayAC: 'hidden',
       searchAlt: 'page',
       textarea: undefined,
-      matchs: []
+      matchs: [],
+      dataType: 'Text'
     };
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
@@ -79,14 +80,16 @@ class Editor extends React.Component {
     this.props.closeEditor();
   }
 
-  setStyleAutoComplete(){
-    const textarea = this.editor.current.querySelector('#textarea'),
-        cordinates = textarea.getBoundingClientRect(),
-        { width, height, left, top } = cordinates,
-        style = `width: ${width}px; height: ${height}px; left: ${left}px; top: ${top}px;`;
+  setStyleAutoComplete = ()=>{
+    if (this.state.dataType === 'Text') {
+      const textarea = this.editor.current.querySelector('#textarea'),
+          cordinates = textarea.getBoundingClientRect(),
+          { width, height, left, top } = cordinates,
+          style = `width: ${width}px; height: ${height}px; left: ${left}px; top: ${top}px;`;
 
-    this.autocompleteCont
-      .current.setAttribute('style', style);
+      this.autocompleteCont
+        .current.setAttribute('style', style);
+    }
   }
 
   showAutoComplete(alt) {
@@ -133,6 +136,13 @@ class Editor extends React.Component {
     );
   }
 
+  setDataType(e) {
+    console.log(e.target.value);
+    this.setState({
+      dataType: e.target.value
+    });
+  }
+
   setData = (e) => {
     this.setState({
       data: e.target.value
@@ -168,16 +178,16 @@ class Editor extends React.Component {
           <div id="rmel-container">
             <header>
               <div>
-                <label>Content section</label>
+                <label>Content section | {this.state.dataType}</label>
               </div>
               <div>
                 <div>
                   <label>Content type:</label>
                 </div>
                 <div>
-                  <select>
-                    <option>Text</option>
-                    <option>Image</option>
+                  <select value={this.state.dataType}  onChange={e => {this.setDataType(e)}}>
+                    <option value="Text">Text</option>
+                    <option value="Image">Image</option>
                     <option disabled>SVG</option>
                     <option disabled>Video</option>
                     <option disabled>File</option>
@@ -185,19 +195,54 @@ class Editor extends React.Component {
                 </div>
               </div>
             </header>
-            <div ref={this.editor}>
-              <MdEditor
-                ref={node => this.mdEditor = node}  
-                value={this.state.content}
-                renderHTML={(text) => this.mdParser.render(text)}
-              />
-            </div>
+            <section>
+
+              {this.state.dataType === 'Text' &&
+                <div ref={this.editor} className='hw-editor-container'>
+                  <MdEditor
+                    ref={node => this.mdEditor = node}  
+                    value={this.state.content}
+                    renderHTML={(text) => this.mdParser.render(text)}
+                  />
+                </div>
+              }
+
+              {this.state.dataType === 'Image' &&
+                <div className='hw-uploadImage-container'>
+
+                  <div>
+                    <button><MdFileUpload /> Upload image</button>
+                    <input hidden type="file" name="" id="upload" accept="image/*" />
+                  </div>
+
+                  <div>
+                    <div>
+                      <img 
+                        src="https://holo.host//wp-content/uploads/illustration-holodots.png"
+                        width='300'
+                        height='150'
+                      />
+                    </div>
+                    <div>
+                      <MdImage />
+                    </div>
+                  </div>
+
+                </div>
+              }
+
+            </section>
             <footer>
               <div>
                 <button onClick={this.close}>Cancel</button>
                 <button onClick={this.updatePageSections}>{txtBtn}</button>
               </div>
             </footer>
+
+
+
+
+
 
             <div className={'autocomplete-cont ' + this.state.displayAC} ref={this.autocompleteCont}>
               <div>
@@ -236,6 +281,10 @@ class Editor extends React.Component {
                 </div> 
               </div>
             </div>
+
+
+
+            
 
           </div>
         </div>

@@ -19,6 +19,7 @@ div#editor{
                 height: 50px;
                 background: #FAFAFA;
                 display: flex;
+                box-shadow: 0px -1px 1px rgb(226, 226, 226) inset;
                 
                 >div{
                     width: 50%;
@@ -66,14 +67,20 @@ div#editor{
                                 margin:0;
                                 overflow: hidden;
                                 height: 100%;
+                                cursor: pointer;
 
                                 border-top-right-radius: .5em;
                                 font-size: 12px;
-                                background: #FAFAFA;
+                                background: transparent;
                                 border: 0;
                                 
+                                transition: .5s;
+
                                 &:focus{
                                     outline: 0;
+                                }
+                                &:hover{
+                                    background: rgb(245, 245, 245);
                                 }
                             }
                         }
@@ -85,6 +92,7 @@ div#editor{
                 height: 100%;
         
                 >div.rc-md-editor {
+                    max-height: 618.281px!important;
                     >div:first-child.rc-md-navigation{
                         background-color: rgb(255, 255, 255);
                         border-color: #f3f3f3;
@@ -94,6 +102,90 @@ div#editor{
                     >section.sec-md
                     >textarea#textarea{
                         padding-top: 30px;
+                    }
+                }
+            }
+            >section{
+                height: 100%;
+                >div{
+                    height: 100%;
+
+                    &.hw-editor-container{
+
+                    }
+
+                    &.hw-uploadImage-container{
+                        display: flex;
+                        flex-direction: column;
+
+                        >div:first-child{
+                            padding: 2em 0 1em;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            position: relative;
+
+                            &::after{
+                                content: '';
+                                position: absolute;
+                                height: 1px;
+                                width: 40%;
+                                background-color: oPrimaryColor(.5);
+                                bottom: 0;
+                            }
+
+                            >button{
+                                padding: .65em 1.1em;
+                                border: none;
+                                background-color: transparent;
+                                border-radius: .3em;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                cursor: pointer;
+                                color: #FFFFFF;
+                                background-color: $primary-color;
+                                >svg{
+                                    margin-right: .5em;
+                                    font-size: 1.5em;
+                                }
+                                &:focus{
+                                    outline: 0;
+                                }
+                            }
+                        }
+
+                        >div:last-child{
+                            height: 100%;
+                            overflow-x: hidden;
+                            overflow-y: auto;
+                            position: relative;
+                            >div{
+                                
+                                width: 100%;
+                                &:first-child{
+                                    display: flex;
+                                    justify-content: center;
+                                    position: relative;
+                                    z-index: 200;
+                                }
+                                
+                                &:last-child{
+                                    height: 100%;
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    z-index: 100;
+                                    >svg{
+                                        opacity: .2;
+                                        font-size: 10em;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
