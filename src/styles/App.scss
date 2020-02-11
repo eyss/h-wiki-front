@@ -433,8 +433,29 @@ div.container{
                                 }
                             }
 
-                            &:first-child{ width: 100%; }
-                            
+                            &:first-child{ 
+                                width: 100%;
+                                position: relative;
+                                >input{
+                                    text-indent: 35px;
+                                    padding-left: 0;
+                                }
+                                >div{
+                                    width: 35px;
+                                    height: 100%;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    >svg{
+                                        font-size: 1.4em;
+                                        color: rgb(117, 117, 117);
+                                    }
+                                }
+                            }
+
                             &:nth-child(2){
                                 padding: 0 .5em;
                                 width: calc(50% - 1em);

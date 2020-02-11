@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Fragment } from 'react';
+import { gql } from "apollo-boost";
 import Navbar from './Navbar';
-import { MdClose, MdAssignmentInd, MdSync } from 'react-icons/md';
+import { MdAssignmentInd, MdSync, MdSearch, MdAccountBox } from 'react-icons/md';
 import { connect } from 'react-redux';
 
 class RolesManagement extends React.Component {
@@ -9,8 +10,9 @@ class RolesManagement extends React.Component {
       this.state = {
         userName: '',
         role: '',
+        agentAddress: '',
         users: [],
-
+        userSelected: false
       }
     }
 
@@ -20,12 +22,83 @@ class RolesManagement extends React.Component {
       });
     }
 
-    updateRole() {
-
+    setUsername = (e)=> {
+      this.setState({
+        userName: e.target.value
+      }, (_this = this)=>{
+        let username = _this.state.userName;
+        if (username.length >= 3) {
+          _this.props.client
+          .query({
+            query: gql`
+              {
+                getUserInfo(username:"${username}") {
+                  userName
+                  id
+                  role
+                }
+              }
+            `
+          }).then(res => {
+            console.log(res.data.getUserInfo);
+            this.setState({
+              users: res.data.getUserInfo
+            });
+          });
+        }
+      });
     }
-    
-    restoreUser(){
 
+     updateRole = async () => {
+       console.log('updated role');
+      await this.props.client
+        .mutate({
+          mutation: gql`
+            mutation roleUpdate(
+              $currentRole: String!
+              $agentAddress: ID!
+              $newRole: String!
+            ) {
+              roleUpdate (currentRole:$currentRole, agentAddress:$agentAddress, newRole:$newRole) 
+            }
+          `,
+          variables: {
+            currentRole: this.state.currentRole,
+            agentAddress: this.state.agentAddress,
+            newRole: this.state.role,
+          }
+        }).then(res =>{
+          this.props.client.resetStore();
+          this.unselectUser();
+          console.log('already updated');
+        });
+    }
+
+    unselectUser = ()=>{
+      this.setState({
+        userSelected: false,
+        userName: '',
+        currentRole: '',
+        agentAddress: '',
+        users: []
+      });
+    }
+
+    selectUser = (e)=>{
+      let el = e.target,
+          tag = el.nodeName,
+          pos = el.dataset.pos;
+
+      if (tag === 'SPAN') { pos = el.parentNode.dataset.pos; }
+      let currentUser = this.state.users[pos];
+
+      this.setState({
+        userSelected: true,
+        userName: currentUser.userName,
+        currentRole: currentUser.role,
+        agentAddress: currentUser.id,
+        users: []
+      });
     }
 
   
@@ -48,63 +121,76 @@ class RolesManagement extends React.Component {
                 <div>
                   <form onSubmit={e => e.preventDefault() }>
                     <div>
-                      <input type="text" placeholder="Insert username" />
+                      <input
+                        type="text"
+                        placeholder="Insert username"
+                        value={this.state.userName}
+                        onChange={e => { this.setUsername(e) }}
+                        disabled={
+                          this.state.userSelected ?
+                          true : false}
+                      />
+                      <div>
+                        {
+                          !this.state.userSelected ?
+                            <MdSearch />
+                          :
+                            <MdAccountBox />
+                        }
+                      </div>
                     </div>
                     
-                    <div>
-                      <select value={this.state.role} onChange={e => {this.setRole(e)}}>
-                        <option value="" defaultValue>Select role</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Editor">Editor</option>
-                        <option value="Reader">Reader</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <button>Assign</button>
-                    </div>
+                    {this.state.userSelected &&
+                      <Fragment>
+                        <div>
+                          <select value={this.state.role} onChange={e => {this.setRole(e)}}>
+                            <option value="" defaultValue>Select role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Editor">Editor</option>
+                            <option value="Reader">Reader</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <button onClick={e =>{ this.updateRole() }}>
+                            Assign
+                          </button>
+                        </div>
 
-                    <div>
-                      <button>
-                        <MdSync />
-                      </button>
-                    </div>
-
+                        <div>
+                          <button onClick={e=>{this.unselectUser()}}>
+                            <MdSync />
+                          </button>
+                        </div>
+                      </Fragment>
+                    }
                   </form>
                   
                 </div>
 
                 <div>
-                    
-                  <div>
-                    <div>
-                      <label>Results: | {this.state.role}</label>
-                    </div>
-                  </div>
+                  {this.state.users.length > 0 &&
+                    <Fragment>
+                      <div>
+                        <div>
+                          <label>Results:</label>
+                        </div>
+                      </div>
 
-                  <div>
-                    <ul>
-                      <li>
-                        Alix
-                        <span>Admin</span>
-                      </li>
-
-                      <li>
-                        Jhonatan
-                        <span>Admin</span>
-                      </li>
-
-                      <li>
-                        Carlos
-                        <span>Admin</span>
-                      </li>
-
-                      <li>
-                        Hector
-                        <span>Admin</span>
-                      </li>
-                    </ul>
-                  </div>
+                      <div>
+                        <ul>
+                          {this.state.users.map((user, key)=>{
+                            return(
+                              <li key={key} data-pos={key} onClick={ e =>{ this.selectUser(e) }}>
+                                {user.userName}
+                                <span>{user.role}</span>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    </Fragment>
+                  }
 
                 </div>
               </section>

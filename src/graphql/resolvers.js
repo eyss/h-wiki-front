@@ -1,4 +1,9 @@
 var id;
+function roleUpdate(callZome, fn, role, address) {
+  return callZome('__H_Wiki', 'wiki', fn)
+  ({role_name: role, agent_address: address})
+}
+
 export const resolvers = {
   Query: {
     async page(_, { title }, __) {
@@ -55,9 +60,25 @@ export const resolvers = {
           return JSON.parse(usernames).Ok
         });
     },
+    getUserInfo(_,{username}, {callZome}) {
+      return callZome('__H_Wiki', 'wiki', 'get_users')
+        ({data: username})
+        .then(usernames => {
+          return JSON.parse(usernames).Ok
+        });
+    }
   },
   User: {
     userName: userName => userName,
+    id(user_name, __, { callZome }) {
+      return callZome('__H_Wiki', 'wiki', 'get_agent_user')
+      ({ user_name })
+        .then(page => {
+          page = JSON.parse(page);
+          return page.Ok
+        })
+        
+    },
     role(user_name, __, { callZome }) {
       return callZome('__H_Wiki', 'wiki', 'get_agent_user')
       ({ user_name })
@@ -246,6 +267,19 @@ export const resolvers = {
           throw new Error(JSON.parse(res).Err);
         }
       });
+    },
+    async roleUpdate(a, {currentRole, agentAddress, newRole}, { callZome }) {
+      if (currentRole === 'Reader') {
+        return roleUpdate(callZome, 'assign_role', newRole, agentAddress)
+        .then(res => newRole)
+      } else {
+        return roleUpdate(callZome, 'unassign_role', currentRole, agentAddress)
+          .then(res =>{
+            return roleUpdate(callZome, 'assign_role', newRole, agentAddress)
+            .then(res => newRole)
+          })
+          .catch(res => currentRole);
+      }
     }
   }
 };

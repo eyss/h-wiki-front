@@ -20,6 +20,8 @@ export const typeDefs = gql`
     getId: User!
     getPageTitle(title: String!): [String!]!
     getUsername(username: String!): [String!]!
+    getUserInfo(username: String!): [User!]!
+    
   }
 
   input SectionInput {
@@ -41,6 +43,7 @@ export const typeDefs = gql`
     ): Page!
     removeSection(id: ID!): Page!
     updateSection(id: ID!, section: SectionInput!): Section!
+    roleUpdate(currentRole: String!, agentAddress: ID!, newRole:String!): String!
   }
   type Role {
     name: String!
@@ -52,7 +55,8 @@ export const typeDefs = gql`
   }
 
   type User {
-    userName: ID!
+    id:ID!
+    userName: String!
     role: String!
   }
 
