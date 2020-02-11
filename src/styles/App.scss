@@ -419,32 +419,7 @@ div.container{
                         justify-content: space-between;
                         >div{
                             display: flex;
-                            
-                            &:first-child{
-                                width: 100%;
-                            }
-                            &:nth-child(2){
-                                padding: 0 .5em;
-                                width: calc(50% - 5px);
-                            }
-                            &:nth-child(3){
-                                width: 45%;
-                            }
-
-                            >select, input{
-                                background-color: #FFFFFF;
-                                border-radius: .5em;
-                                border: 1px solid rgba(70, 70, 70, .3);
-                                &::placeholder{ color: rgb(124, 124, 124); }
-                                &:focus{
-                                    outline: 0;
-                                    box-shadow: 0 0 0 1px oPrimaryColor(.4);
-                                }
-                            }
-
-                            >button{
-                                @include buttonPropertys('normal');
-                            }
+                            align-items: center;
 
                             >input, >select, >button{
                                 margin: 0;
@@ -457,6 +432,50 @@ div.container{
                                     outline: 0;
                                 }
                             }
+
+                            &:first-child{ width: 100%; }
+                            
+                            &:nth-child(2){
+                                padding: 0 .5em;
+                                width: calc(50% - 1em);
+                            }
+                            &:nth-child(3){
+                                width: 45%;
+                                >button{
+                                    @include buttonPropertys('normal', 100%, 100%);
+                                }
+                            }
+
+                            &:nth-child(4){
+                                min-width: 45px;
+                                justify-content: center;
+                                >button{
+                                    display: flex;
+                                    justify-content: center;
+                                    width: auto!important;
+                                    padding: 0;
+                                    margin: 0;
+                                    cursor: normal;
+                                    border: none;
+                                    background-color: transparent;
+                                    >svg {
+                                        color: rgb(0, 133, 211);
+                                        cursor: pointer;
+                                        font-size: 1.6em;
+                                    }
+                                }
+                            }
+
+                            >select, input{
+                                background-color: #FFFFFF;
+                                border-radius: .5em;
+                                border: 1px solid rgba(70, 70, 70, .3);
+                                &::placeholder{ color: rgb(124, 124, 124); }
+                                &:focus{
+                                    outline: 0;
+                                    box-shadow: 0 0 0 1px oPrimaryColor(.4);
+                                }
+                            }                        
                         }
                     }
                 }
@@ -483,29 +502,6 @@ div.container{
                                 font-size: .9em;
                                 color: #4e4e4e;
                                 font-weight: bold;
-                            }
-                        }
-
-                        >div:last-child{
-                            display: flex;
-                            justify-content: flex-end;
-                            >button{
-                                padding: 0;
-                                margin: 0;
-                                border: none;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                font-size: 1.3em;
-                                background-color: transparent;
-                                color: #ff0000;
-                                font-weight: bold;
-                                cursor: pointer;
-                                position: relative;
-                                right: .5em;
-                                &:focus{
-                                    outline: 0;
-                                }
                             }
                         }
                     }

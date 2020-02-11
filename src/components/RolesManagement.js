@@ -1,15 +1,33 @@
 import React from 'react';
 import Navbar from './Navbar';
-import { MdClose, MdAssignmentInd } from 'react-icons/md';
+import { MdClose, MdAssignmentInd, MdSync } from 'react-icons/md';
 import { connect } from 'react-redux';
 
 class RolesManagement extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
-  
+        userName: '',
+        role: '',
+        users: [],
+
       }
     }
+
+    setRole = (e)=>{
+      this.setState({
+        role: e.target.value
+      });
+    }
+
+    updateRole() {
+
+    }
+    
+    restoreUser(){
+
+    }
+
   
     render() {
       return (
@@ -34,17 +52,24 @@ class RolesManagement extends React.Component {
                     </div>
                     
                     <div>
-                      <select>
-                        <option defaultValue value="">Select role</option>
-                        <option value="">Administrator</option>
-                        <option value="">Editor</option>
-                        <option value="">Reader</option>
+                      <select value={this.state.role} onChange={e => {this.setRole(e)}}>
+                        <option value="" defaultValue>Select role</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Editor">Editor</option>
+                        <option value="Reader">Reader</option>
                       </select>
                     </div>
                     
                     <div>
                       <button>Assign</button>
                     </div>
+
+                    <div>
+                      <button>
+                        <MdSync />
+                      </button>
+                    </div>
+
                   </form>
                   
                 </div>
@@ -53,10 +78,7 @@ class RolesManagement extends React.Component {
                     
                   <div>
                     <div>
-                      <label>Results:</label>
-                    </div>
-                    <div>
-                      <button><MdClose /></button>
+                      <label>Results: | {this.state.role}</label>
                     </div>
                   </div>
 

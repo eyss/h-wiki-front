@@ -542,8 +542,8 @@ class Wiki extends React.Component {
                     <div key={key} data-page={key}>
                       <div>
                         {(key !== 0
-                          && this.props.userId.roles !== 'Reader')
-                          && <button onClick={e =>{this.showPageData(key)}}>
+                          && this.props.userId.roles !== 'Reader') &&
+                        <button onClick={e =>{this.showPageData(key)}}>
                           <MdCreate />
                         </button>}
                       </div>
