@@ -15,7 +15,6 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 async function start() {
-  console.log('en el index');
     let parameters = {
       client: null,
       userId: null

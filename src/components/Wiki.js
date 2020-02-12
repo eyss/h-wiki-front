@@ -246,26 +246,30 @@ class Wiki extends React.Component {
       return JSON.parse(newState);
     }
 
-    async updatePageSections(mode, pos, content, currentSection) {
+    async updatePageSections(data) {
       let state = {},
           section = {
-            type: 'text',
-            content: content,
-            rendered_content: 'text/html'
+            type: data.dataType,
+            content: data.content,
+            rendered_content: data.renderedContent
           },
           pageData = this.stateAssignment(this.state.pageData),
-          secitonUpdated;
-
+          secitonUpdated,
+          mode = data.mode,
+          pos = data.pos,
+          currentSection = data.currentSection;
+  
       if (this.state.existingPage) {
+        
         this.setState({
           alert: true,
           preloader: true,
         });
         var pages = this.stateAssignment(this.state.pages);
-
+  
         if (mode === 'addns') {
           this.setState({preloaderMsg: 'Adding section to the page'});
-
+  
           await this.props.client
           .mutate({
             mutation: gql`
@@ -283,15 +287,15 @@ class Wiki extends React.Component {
           .then(res => {
             // var updatedPage = res.data.addSectionToPage;
           });
-
+  
         } else if (mode === 'addsb' || mode === 'addsa') {
           this.setState({preloaderMsg: 'Adding section to the page'});
-
+  
           var sections = [];
           for (let i in pageData.sections) {
               sections.push(pageData.sections[i].id);
           }
-
+  
           await this.props.client
           .mutate({
             mutation: gql`
@@ -325,18 +329,18 @@ class Wiki extends React.Component {
             let updatedPage = res.data.addOrderedSectionToPage;
             updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
             pages.splice(pageData.position, 1, updatedPage);
-
+  
             updatedPage.position = pageData.position;
-
+  
             state = {
               pageData: updatedPage,
               pages
             };
           });
-
+  
         } else if (mode === 'edit') {
           this.setState({preloaderMsg: 'Updating section to the page'});
-
+  
           await this.props.client
           .mutate({
             mutation: gql`
@@ -354,7 +358,7 @@ class Wiki extends React.Component {
             `,
             variables: { id: currentSection.id, section: {
               type: currentSection.type,
-              content,
+              content: data.content,
               rendered_content: currentSection.rendered_content
             }}
           })
@@ -369,46 +373,45 @@ class Wiki extends React.Component {
             };
           });
         }
-
+  
         await this.props.client.resetStore();
-
+  
       } else {
-
+  
         if (mode === 'addns') {
-
+  
           pageData.sections.push(section);
           state = {pageData};
-
+  
         } else if (mode === 'addsb' || mode === 'addsa') {
-
+  
           if (mode === 'addsa') {
             let sectionsUpdate;
             sectionsUpdate = [section, ...pageData.sections];
             pageData.sections = [];
             pageData.sections = sectionsUpdate;
-
+  
           } else if (mode === 'addsb') {
             pageData.sections.splice((pos+1), 0, section);
           }
-
+  
           state = {pageData};
-
+  
         } else if (mode === 'edit') {
-
+  
           secitonUpdated = currentSection;
-          secitonUpdated.content = content;
+          secitonUpdated.content = data.content;
           pageData.sections.splice(pos, 1, secitonUpdated);
-
+  
           state = { pageData };
           state.alert = false;
         }
-
+  
       }
-
+  
       this.setState(state, (_this=this)=>{
         _this.closeEditor();
       });
-
     }
 
     async removeSection(pos) {
@@ -479,12 +482,7 @@ class Wiki extends React.Component {
         confirmation: false
       }, (_this=this, pageDataProcess = this.state.pageDataProcess)=>{
         if (pageDataProcess.process === 'update') {
-          _this.updatePageSections(
-            pageDataProcess.mode,
-            pageDataProcess.pos,
-            pageDataProcess.content,
-            pageDataProcess.currentSection
-          );
+          _this.updatePageSections(pageDataProcess);
         } else if (pageDataProcess.process === 'remove') {
           _this.removeSection(pageDataProcess.pos);
         }

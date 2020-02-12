@@ -175,6 +175,7 @@ export const resolvers = {
   },
   Mutation: {
     async createPageWithSections(a, { title, sections }, { callZome }) {
+      console.log('Resolver createPageWithSections: ', sections);
       return callZome('__H_Wiki', 'wiki', 'create_page_with_sections'
       )({ title, sections }).then(res => {
         if (JSON.parse(res).Ok) {

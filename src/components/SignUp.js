@@ -17,7 +17,9 @@ class SignUp extends React.Component {
       confirmationMsg: '',
       preloader: false,
       preloaderMsg: '',
-      loadingPage: true
+      loadingPage: true,
+      valmsg: ''
+
     }
     this.username = React.createRef();
   }
@@ -36,34 +38,42 @@ class SignUp extends React.Component {
 
   registerUser(e) {
     e.preventDefault();
-    this.setState({
-      preloader: true,
-      alert: true,
-      preloaderMsg: 'registering user'
-    });
+    let unl = this.state.username.length;
+    if (unl < 3 ) {
+      let valmsg = unl === 0 ? 
+          'The username field is required' : 
+          'The username must be at least 3 characters';
+      this.setState({ valmsg });
+    } else {
+      this.setState({
+        preloader: true,
+        alert: true,
+        preloaderMsg: 'registering user'
+      });
 
-    this.props.client
-    .mutate({
-      mutation: gql`
-        mutation createUser($name: String!) {
-          createUser(name: $name) {
-            userName
-            role
-           }
+      this.props.client
+      .mutate({
+        mutation: gql`
+          mutation createUser($name: String!) {
+            createUser(name: $name) {
+              userName
+              role
+            }
+          }
+        `,
+        variables: {
+          name: this.state.username
         }
-      `,
-      variables: {
-        name: this.state.username
-      }
-    }).then(res => {
-      this.props.setUserId(res.data.createUser);
-    }).catch(err => {
-      console.log(err);
-    }).finally(e => {
-      return (
-        <Redirect to="/" />
-      );
-    });
+      }).then(res => {
+        this.props.setUserId(res.data.createUser);
+      }).catch(err => {
+        console.log(err);
+      }).finally(e => {
+        return (
+          <Redirect to="/" />
+        );
+      });
+    }
   }
 
   render() {
@@ -94,6 +104,9 @@ class SignUp extends React.Component {
                   ref={this.username}
                   autoFocus
                 />
+                <div>
+                  <label>{this.state.valmsg}</label>
+                </div>
               </div>
               <div>
                 <button type='submit'>Submit</button>

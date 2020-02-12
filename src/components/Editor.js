@@ -34,6 +34,8 @@ class Editor extends React.Component {
   
   componentDidMount() {
     if (this.props.mode === 'edit' ) {
+      let section = this.props.getContentSection(this.props.pos, this.props.mode);
+      console.log(section);
       this.setState({
         content: this.props.getContentSection(this.props.pos, this.props.mode).content 
       });
@@ -64,26 +66,42 @@ class Editor extends React.Component {
 
   updatePageSections = () => {
 
-    const content = this.state.dataType === 'Text' ?
-                    this.mdEditor.getMdValue() : 
-                    `![](${this.state.image})`;
+    let contents = this.getContents();
+    console.log(contents);
+    let data = {
+      process: 'update',
+      mode: this.props.mode,
+      dataType: this.state.dataType,
+      content: contents.content,
+      renderedContent: contents.renderedContent,
+      pos: this.props.pos,
+      currentSection: this.props.getContentSection(this.props.pos, this.props.mode)
+    };
 
    if (this.props.mode === 'edit') {
-      this.props.showConfirmation({
-        process: 'update',
-        pos: this.props.pos,
-        mode: this.props.mode,
-        content: content,
-        currentSection: this.props.getContentSection(this.props.pos, this.props.mode)
-      });
+      this.props.showConfirmation(data);
     } else {
-      this.props.updatePageSections(
-        this.props.mode,
-        this.props.pos,
-        content,
-        this.props.getContentSection(this.props.pos, this.props.mode)
-      );
+      this.props.updatePageSections(data);
     }
+  }
+
+  getContents(){
+    let dataType = this.state.dataType,
+        content = this.mdEditor.getMdValue(),
+        renderedContent = this.mdEditor.getHtmlValue(),
+        data = {
+          content: content,
+          renderedContent: renderedContent,
+        };
+      
+    if (dataType === 'Image') {
+      data = {
+        content: `![](${this.state.image})`,
+        renderedContent: `<img src="${this.state.image}" />`,
+      }
+    }
+
+    return data;
   }
   
   close = () => {    
@@ -217,9 +235,9 @@ class Editor extends React.Component {
                   <select value={this.state.dataType}  onChange={e => {this.setDataType(e)}}>
                     <option value="Text">Text</option>
                     <option value="Image">Image</option>
-                    <option disabled>SVG</option>
-                    <option disabled>Video</option>
-                    <option disabled>File</option>
+                    <option value="Svg" disabled>SVG</option>
+                    <option value="Video" disabled>Video</option>
+                    <option value="File" disabled>File</option>
                   </select>
                 </div>
               </div>
