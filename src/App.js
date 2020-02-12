@@ -13,6 +13,7 @@ import PageNotFound from './components/PageNotFound';
 
 
 function App(props) {
+  console.log(props.userId.role);
   return (
     <BrowserRouter>
       <Switch>

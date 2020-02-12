@@ -15,6 +15,7 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 async function start() {
+  console.log('en el index');
     let parameters = {
       client: null,
       userId: null
@@ -61,6 +62,7 @@ async function start() {
         })
         .then(res => {
           res = res.data.getId;
+          console.log(res);
           let userId = {
             userName : '',
             role: 'Reader'
@@ -69,6 +71,8 @@ async function start() {
           if (res.userName.length > 0) {
             userId = res;     
           }
+
+        console.log(userId);
           store.dispatch({
             type: 'SET_USERID',
             value: userId

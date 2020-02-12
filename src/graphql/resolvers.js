@@ -275,8 +275,12 @@ export const resolvers = {
       } else {
         return roleUpdate(callZome, 'unassign_role', currentRole, agentAddress)
           .then(res =>{
-            return roleUpdate(callZome, 'assign_role', newRole, agentAddress)
-            .then(res => newRole)
+            if (newRole !== 'Reader') {
+              return roleUpdate(callZome, 'assign_role', newRole, agentAddress)
+              .then(res => newRole)
+            } else {
+              return true;
+            }
           })
           .catch(res => currentRole);
       }

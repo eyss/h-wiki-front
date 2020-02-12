@@ -10,15 +10,18 @@ class RolesManagement extends React.Component {
       this.state = {
         userName: '',
         role: '',
+        currentRole: '',
         agentAddress: '',
         users: [],
-        userSelected: false
+        userSelected: false,
+        valmsg: ''
       }
     }
-
+    
     setRole = (e)=>{
       this.setState({
-        role: e.target.value
+        role: e.target.value,
+        valmsg: ''
       });
     }
 
@@ -50,7 +53,11 @@ class RolesManagement extends React.Component {
     }
 
      updateRole = async () => {
-       console.log('updated role');
+     if(!this.state.role.length){
+      this.setState({
+        valmsg: 'Select role'
+      });
+     }else {
       await this.props.client
         .mutate({
           mutation: gql`
@@ -72,6 +79,7 @@ class RolesManagement extends React.Component {
           this.unselectUser();
           console.log('already updated');
         });
+      }
     }
 
     unselectUser = ()=>{
@@ -80,7 +88,8 @@ class RolesManagement extends React.Component {
         userName: '',
         currentRole: '',
         agentAddress: '',
-        users: []
+        users: [],
+        role: ''
       });
     }
 
@@ -91,7 +100,7 @@ class RolesManagement extends React.Component {
 
       if (tag === 'SPAN') { pos = el.parentNode.dataset.pos; }
       let currentUser = this.state.users[pos];
-
+      console.log(currentUser.role);
       this.setState({
         userSelected: true,
         userName: currentUser.userName,
@@ -100,7 +109,6 @@ class RolesManagement extends React.Component {
         users: []
       });
     }
-
   
     render() {
       return (
@@ -131,6 +139,9 @@ class RolesManagement extends React.Component {
                           true : false}
                       />
                       <div>
+                          <label>{this.state.valmsg}</label>
+                      </div>
+                      <div>
                         {
                           !this.state.userSelected ?
                             <MdSearch />
@@ -145,9 +156,15 @@ class RolesManagement extends React.Component {
                         <div>
                           <select value={this.state.role} onChange={e => {this.setRole(e)}}>
                             <option value="" defaultValue>Select role</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Editor">Editor</option>
-                            <option value="Reader">Reader</option>
+                            {this.state.currentRole.length > 0 && this.state.currentRole !== 'Admin' &&
+                              <option value="Admin">Admin</option>
+                            }
+                            {this.state.currentRole.length > 0 && this.state.currentRole !== 'Editor' &&
+                              <option value="Editor">Editor</option>
+                            }
+                            {this.state.currentRole.length > 0 && this.state.currentRole !== 'Reader' &&
+                              <option value="Reader">Reader</option>
+                            }
                           </select>
                         </div>
                         
@@ -172,9 +189,7 @@ class RolesManagement extends React.Component {
                   {this.state.users.length > 0 &&
                     <Fragment>
                       <div>
-                        <div>
-                          <label>Results:</label>
-                        </div>
+                        <label>Results:</label>
                       </div>
 
                       <div>

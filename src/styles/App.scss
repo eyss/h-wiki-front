@@ -436,11 +436,26 @@ div.container{
                             &:first-child{ 
                                 width: 100%;
                                 position: relative;
+                                
                                 >input{
                                     text-indent: 35px;
                                     padding-left: 0;
                                 }
-                                >div{
+
+                                >div:nth-child(2){
+                                    position: absolute;
+                                    top: 100%;
+                                    left: 0;
+                                    padding: 0;
+                                    margin: 0;
+
+                                    >label {
+                                        color: rgb(255, 100, 100);
+                                        font-size: .75em;
+                                    }
+                                }
+
+                                >div:last-child{
                                     width: 35px;
                                     height: 100%;
                                     display: flex;
@@ -511,21 +526,15 @@ div.container{
 
                         position: relative;
                         z-index: 1000;
-                        padding: 1.2em 0 .5em;
-                        display: flex;
+                        padding: 1.75em 0 .5em 1em;
                         box-shadow: rgba(128,128,128, .1) 0px 3px 2px;
-
-                        >div{width: 50%;}
-
-                        >div:first-child{
-                            padding-left: .5em;
-                            >label{
-                                font-size: .9em;
-                                color: #4e4e4e;
-                                font-weight: bold;
-                            }
+                        >label{
+                            font-size: .9em;
+                            color: #4e4e4e;
+                            font-weight: bold;
                         }
                     }
+                    
                     //Result content
                     >div:last-child{
                         position: relative;
