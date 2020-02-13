@@ -268,6 +268,11 @@ class Wiki extends React.Component {
         var pages = this.stateAssignment(this.state.pages);
   
         if (mode === 'addns') {
+          /**
+          * This condition does not run because when you delete all 
+          * sections of a page, the application stops working, 
+          * so you cannot add a new section.
+          */
           this.setState({preloaderMsg: 'Adding section to the page'});
   
           await this.props.client

@@ -7,7 +7,6 @@ import { connect } from 'react-redux';
 import { gql } from "apollo-boost";
 import Compress from 'compress.js'
 
-
 class Editor extends React.Component {
   mdEditor = null;
   mdParser = null;
@@ -20,9 +19,9 @@ class Editor extends React.Component {
       searchAlt: 'page',
       textarea: undefined,
       matchs: [],
-      dataType: 'Text',
+      dataType: undefined,
+      dataTypes: [],
       image: '',
-
     };
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
@@ -33,11 +32,31 @@ class Editor extends React.Component {
   }
   
   componentDidMount() {
+
     if (this.props.mode === 'edit' ) {
-      let section = this.props.getContentSection(this.props.pos, this.props.mode);
-      console.log(section);
+      let section = this.props.getContentSection(this.props.pos, this.props.mode),
+          state= {},
+          dataType = section.type;
+          
+      if(dataType === 'Text') {
+        state.content = section.content;
+      } else if (dataType === 'Image' || dataType === 'SVG') {
+        let img = new DOMParser().parseFromString(section.rendered_content, 'text/html');
+        state.image = img.querySelector('img').getAttribute('src');
+      }
+
+      state.dataType = dataType;
+      state.dataTypes = [dataType];
+      this.setState(state);
+    } else {
       this.setState({
-        content: this.props.getContentSection(this.props.pos, this.props.mode).content 
+        dataTypes: [
+          'Text',
+          'Image',
+          'SVG',
+          'Video',
+          'File',
+        ]
       });
     }
 
@@ -51,27 +70,26 @@ class Editor extends React.Component {
     window.addEventListener('resize', ()=>{ this.setStyleAutoComplete(); });
     
     const textarea = editor.querySelector('#textarea');
+    this.testTextarea(textarea);
     this.setState({ textarea: textarea });
 
-    textarea.addEventListener('keyup', (e)=>{
-      let str = e.target.value,
-          l = str.length,
-          lastChar = str.substr((l-1), l);
+    // textarea.addEventListener('keyup', (e)=>{
+    //   let str = e.target.value,
+    //       l = str.length,
+    //       lastChar = str.substr((l-1), l);
 
-      if ((lastChar === '/' || lastChar === '@') && !((e.keyCode>= 37 && e.keyCode <= 40) || (e.keyCode === 8))) {
-        this.showAutoComplete(lastChar === '/' ? 'page': 'username')
-      }
-    });
+    //   if ((lastChar === '/' || lastChar === '@') && !((e.keyCode>= 37 && e.keyCode <= 40) || (e.keyCode === 8))) {
+    //     this.showAutoComplete(lastChar === '/' ? 'page': 'username')
+    //   }
+    // });
   }
 
   updatePageSections = () => {
-
-    let contents = this.getContents();
-    console.log(contents);
-    let data = {
+    let contents = this.getContents(),
+    data = {
       process: 'update',
       mode: this.props.mode,
-      dataType: this.state.dataType,
+      dataType: this.state.dataType || 'Text',
       content: contents.content,
       renderedContent: contents.renderedContent,
       pos: this.props.pos,
@@ -87,29 +105,25 @@ class Editor extends React.Component {
 
   getContents(){
     let dataType = this.state.dataType,
-        content = this.mdEditor.getMdValue(),
-        renderedContent = this.mdEditor.getHtmlValue(),
         data = {
-          content: content,
-          renderedContent: renderedContent,
+          content: undefined,
+          renderedContent: undefined,
         };
-      
-    if (dataType === 'Image') {
-      data = {
-        content: `![](${this.state.image})`,
-        renderedContent: `<img src="${this.state.image}" />`,
-      }
+
+    if (dataType === 'Text' || !dataType) {
+      data.content = this.mdEditor.getMdValue();
+      data.renderedContent = this.mdEditor.getHtmlValue();
     }
 
+    if (dataType === 'Image') {
+      data.content = `![](${this.state.image})`;
+      data.renderedContent = `<img src="${this.state.image}" />`;
+    }
     return data;
-  }
-  
-  close = () => {    
-    this.props.closeEditor();
   }
 
   setStyleAutoComplete = ()=>{
-    if (this.state.dataType === 'Text') {
+    if (this.state.dataType === 'Text' || !this.state.dataTye) {
       const textarea = this.editor.current.querySelector('#textarea'),
           cordinates = textarea.getBoundingClientRect(),
           { width, height, left, top } = cordinates,
@@ -121,7 +135,6 @@ class Editor extends React.Component {
   }
 
   showAutoComplete(alt) {
-    console.log(alt);
     this.setState({
       searchAlt: alt,
       displayAC: 'show',
@@ -141,6 +154,13 @@ class Editor extends React.Component {
   }
 
   setRefContent = (e) => {
+    let i,f,r,currentPos = this.state.posCText;
+
+    if(currentPos === 0) {
+
+    }
+    console.log(this.state.posCText);
+    /*
     var textarea = this.state.textarea,
       content = textarea.value,
       l = content.length,
@@ -161,11 +181,10 @@ class Editor extends React.Component {
       (_this = this) => {
         _this.closeAutoComplete();
       }
-    );
+    );*/
   }
 
   setDataType(e) {
-    console.log(e.target.value);
     this.setState({
       dataType: e.target.value
     });
@@ -198,9 +217,8 @@ class Editor extends React.Component {
   }
 
   upLoadImage = (evt) => {
-    const compress = new Compress();
-
-    const files = [...evt.target.files];
+    const compress = new Compress(),
+          files = [...evt.target.files];
 
     compress.compress(files, {
       size: 4,
@@ -216,35 +234,79 @@ class Editor extends React.Component {
     })
   }
 
-  render() {
-    let txtBtn = this.props.mode === 'edit' ? 'Update' : 'Save';
+  testTextarea(textarea){
+    textarea.addEventListener('click', (e)=>{
+      this.setState({posCText: this.getCursorPos(textarea).start});
+    });
 
+    textarea.addEventListener('keypress', (e)=>{
+      this.setState({
+        posCText: this.getCursorPos(textarea).start
+      }, (_this = this) =>{
+        if (e.key === '/' || e.key === '@') {
+          _this.showAutoComplete(e.key === '/' ? 'page': 'username')
+        }
+      });
+    });
+  }
+
+  getCursorPos = (input) => {
+    if ("selectionStart" in input && document.activeElement === input) {
+      return {
+        start: input.selectionStart,
+        end: input.selectionEnd
+      };
+    }
+    else if (input.createTextRange) {
+      var sel = document.selection.createRange();
+      if (sel.parentElement() === input) {
+        var rng = input.createTextRange();
+        rng.moveToBookmark(sel.getBookmark());
+        for (var len = 0; rng.compareEndPoints("EndToStart", rng) > 0; rng.moveEnd("character", -1)) {
+          len++;
+        }
+        rng.setEndPoint("StartToStart", input.createTextRange());
+        for (var pos = { start: 0, end: len }; rng.compareEndPoints("EndToStart", rng) > 0; rng.moveEnd("character", -1)) {
+          pos.start++;
+          pos.end++;
+        }
+        return pos;
+      }
+    }
+    return -1;
+  }
+
+  render() {
     return (
       <div id='editor'>
         <div>
           <div id="rmel-container">
             <header>
               <div>
-                <label>Content section | {this.state.dataType}</label>
+                <label>Content section</label>
               </div>
               <div>
                 <div>
                   <label>Content type:</label>
                 </div>
                 <div>
-                  <select value={this.state.dataType}  onChange={e => {this.setDataType(e)}}>
-                    <option value="Text">Text</option>
-                    <option value="Image">Image</option>
-                    <option value="Svg" disabled>SVG</option>
-                    <option value="Video" disabled>Video</option>
-                    <option value="File" disabled>File</option>
+                  <select
+                    value={this.state.dataType}
+                    onChange={e => {this.setDataType(e)}}
+                    disabled={this.props.mode === 'edit' ? true : false}
+                    >
+                    {this.state.dataTypes.map((optVal, key) =>{
+                      return ( 
+                        <option key={key} value={optVal}>{optVal}</option>
+                      )
+                    })}
                   </select>
                 </div>
               </div>
             </header>
             <section>
 
-              {this.state.dataType === 'Text' &&
+              {(this.state.dataType === 'Text' || !this.state.dataType) &&
                 <div ref={this.editor} className='hw-editor-container'>
                   <MdEditor
                     ref={node => this.mdEditor = node}  
@@ -258,7 +320,6 @@ class Editor extends React.Component {
                 <div className='hw-uploadImage-container'>
 
                   <div>
-
                     <button onClick={ e => { this.imageUploader.current.click() }}>
                       <MdFileUpload /> Upload image
                     </button>
@@ -287,17 +348,13 @@ class Editor extends React.Component {
               }
 
             </section>
+
             <footer>
               <div>
-                <button onClick={this.close}>Cancel</button>
-                <button onClick={this.updatePageSections}>{txtBtn}</button>
+                <button onClick={e =>{ this.props.closeEditor() }}>Cancel</button>
+                <button onClick={this.updatePageSections}>{this.props.mode === 'edit' ? 'Update' : 'Save'}</button>
               </div>
             </footer>
-
-
-
-
-
 
             <div className={'autocomplete-cont ' + this.state.displayAC} ref={this.autocompleteCont}>
               <div>
@@ -336,10 +393,6 @@ class Editor extends React.Component {
                 </div> 
               </div>
             </div>
-
-
-
-            
 
           </div>
         </div>

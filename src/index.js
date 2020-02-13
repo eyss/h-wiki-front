@@ -31,7 +31,7 @@ async function start() {
         }
       });
       var client;
-      await connect({ url: "ws://192.168.1.63:3400"})
+      await connect({ url: "ws://192.168.1.72:3400"})
         .then((context) => {
           const schema = makeExecutableSchema({
             typeDefs,
@@ -61,7 +61,6 @@ async function start() {
         })
         .then(res => {
           res = res.data.getId;
-          console.log(res);
           let userId = {
             userName : '',
             role: 'Reader'
@@ -71,7 +70,6 @@ async function start() {
             userId = res;     
           }
 
-        console.log(userId);
           store.dispatch({
             type: 'SET_USERID',
             value: userId

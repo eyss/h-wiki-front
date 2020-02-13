@@ -43,7 +43,6 @@ class RolesManagement extends React.Component {
               }
             `
           }).then(res => {
-            console.log(res.data.getUserInfo);
             this.setState({
               users: res.data.getUserInfo
             });
@@ -77,7 +76,6 @@ class RolesManagement extends React.Component {
         }).then(res =>{
           this.props.client.resetStore();
           this.unselectUser();
-          console.log('already updated');
         });
       }
     }
@@ -100,7 +98,6 @@ class RolesManagement extends React.Component {
 
       if (tag === 'SPAN') { pos = el.parentNode.dataset.pos; }
       let currentUser = this.state.users[pos];
-      console.log(currentUser.role);
       this.setState({
         userSelected: true,
         userName: currentUser.userName,
