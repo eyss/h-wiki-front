@@ -154,11 +154,22 @@ class Editor extends React.Component {
   }
 
   setRefContent = (e) => {
-    let i,f,r,currentPos = this.state.posCText;
+    let iStr,
+        fStr,
+        ref = `[${e.target.textContent}]()`,
+        currentPos = this.state.posCText,
+        content = this.state.content;
+      
+      // Referencia
+      if (this.state.searchAlt !== 'page') {
+        ref = `**@${e.target.textContent}** `;
+      }
+      
 
-    if(currentPos === 0) {
-
+    if(currentPos === 0 || currentPos === content.length) {
+      content = content + ref;
     }
+
     console.log(this.state.posCText);
     /*
     var textarea = this.state.textarea,

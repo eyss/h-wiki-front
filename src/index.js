@@ -63,12 +63,12 @@ async function start() {
           res = res.data.getId;
           let userId = {
             userName : '',
-            role: 'Reader'
+            role: 'Admin'
           };
           // If user is recived
-          if (res.userName.length > 0) {
-            userId = res;     
-          }
+          // if (res.userName.length > 0) {
+          //   userId = res;     
+          // }
 
           store.dispatch({
             type: 'SET_USERID',
