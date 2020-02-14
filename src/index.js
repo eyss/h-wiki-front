@@ -31,7 +31,7 @@ async function start() {
         }
       });
       var client;
-      await connect({ url: "ws://192.168.1.72:3400"})
+      await connect({ url: "ws://192.168.1.63:3400"})
         .then((context) => {
           const schema = makeExecutableSchema({
             typeDefs,
@@ -60,15 +60,16 @@ async function start() {
           `
         })
         .then(res => {
+          console.log(res);
           res = res.data.getId;
           let userId = {
             userName : '',
-            role: 'Admin'
+            role: 'Reader'
           };
           // If user is recived
-          // if (res.userName.length > 0) {
-          //   userId = res;     
-          // }
+          if (res.userName.length > 0) {
+            userId = res;     
+          }
 
           store.dispatch({
             type: 'SET_USERID',

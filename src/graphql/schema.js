@@ -28,6 +28,8 @@ export const typeDefs = gql`
     type: String!
     content: String!
     rendered_content: String!
+    timestamp: ID!
+
   }
 
   type Mutation {
@@ -61,9 +63,9 @@ export const typeDefs = gql`
   }
 
   extend type Mutation {
-    createRole(name: String!): Role!
-    assignToRole(roleName: String!, agentId: ID!): Role!
-    unassignToRole(roleName: String!, agentId: ID!): Role!
+    createRole(name: String!): String!
+    assignToRole(roleName: String!, agentId: ID!): String!
+    unassignToRole(roleName: String!, agentId: ID!): String!
     createUser(name: String!): User!
   }
 `;

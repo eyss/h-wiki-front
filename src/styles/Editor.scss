@@ -1,11 +1,15 @@
 div#editor{
     @include modalPropertys(25000);
-    background-color: transparent;
+    background-color: oPrimaryColor(.3);
+    overflow-y: auto;
+
     >div {
         width: 65%;
-        height: 90%;
         background-color: #FAFAFA;
         border-radius: .5em;
+
+        
+
 
         >div#rmel-container {
             position: relative;
@@ -17,7 +21,9 @@ div#editor{
                 border-top-left-radius: .5em;
                 border-top-right-radius: .5em;
                 height: 50px;
+                min-height: 50px;
                 background: #FAFAFA;
+               
                 display: flex;
                 box-shadow: 0px -1px 1px rgb(226, 226, 226) inset;
                 
@@ -106,7 +112,20 @@ div#editor{
                 }
             }
             >section{
-                height: 100%;
+                // 500 hacia abaj0
+                @media (max-height: 500px) { 
+                    height: 300px;
+                }
+                // 
+                @media (min-height: 500px) and (max-height: 700px){ 
+                    height: 405px;
+                }
+
+                // Significa de 500 hacia arriba
+                 @media (min-height: 700px) { 
+                    height: 600px;
+                 }
+
                 >div{
                     height: 100%;
 
@@ -195,6 +214,7 @@ div#editor{
         
             >footer {
                 height: 55px;
+                min-height: 55px;
                 width: 100%;
                 display: flex;
                 justify-content: flex-end;

@@ -37,6 +37,7 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'get_username')
         ({})
         .then(res => {
+          console.log(res);
           res = JSON.parse(res).Ok;
 
           if (res) {
@@ -85,10 +86,11 @@ export const resolvers = {
         .then(page => {
           page = JSON.parse(page);
           if (page.Ok) {
+            console.log(page);
             return callZome('__H_Wiki', 'wiki', 'get_agent_roles'
             )({ agent_address: page.Ok }).then((roles) => {
               roles = JSON.parse(roles).Ok;
-              return roles.role_name;
+              return roles;
             });
           } else {
             throw new Error(page.Err);
@@ -177,7 +179,8 @@ export const resolvers = {
     async createPageWithSections(a, { title, sections }, { callZome }) {
       console.log('Resolver createPageWithSections: ', sections);
       return callZome('__H_Wiki', 'wiki', 'create_page_with_sections'
-      )({ title, sections }).then(res => {
+      )({ title, sections, timestamp: parseInt(Date.now()) }).then(res => {
+        console.log(res);
         if (JSON.parse(res).Ok) {
           return title;
         } else {
@@ -195,7 +198,7 @@ export const resolvers = {
       });
 
       return callZome('__H_Wiki', 'wiki', 'update_page'
-      )({ sections: id, title }).then(res => {
+      )({ sections: id, title, timestamp: parseInt(Date.now()) }).then(res => {
         if (JSON.parse(res).Ok) {
           return title;
         } else {
@@ -228,7 +231,7 @@ export const resolvers = {
       }
 
       return callZome('__H_Wiki', 'wiki', 'update_page'
-      )({ sections, title }).then(res => {
+      )({ sections, title, timestamp: parseInt(Date.now()) }).then(res => {
         if (JSON.parse(res).Ok) {
           return title;
         } else {

@@ -122,7 +122,7 @@ class Wiki extends React.Component {
         preloader: true,
         preloaderMsg: 'storing page'
       });
-
+      console.log('Data to save ', this.state.pageData);
       this.props.client
         .mutate({
           mutation: gql`
@@ -138,6 +138,7 @@ class Wiki extends React.Component {
           variables: { title: this.state.pageData.title, sections: this.state.pageData.sections }
         })
         .then(e => {
+          console.log(e);
           var pages = this.stateAssignment(this.state.pages),
               link = '- ['+ this.state.pageData.title +']()\n';
 
@@ -251,14 +252,15 @@ class Wiki extends React.Component {
           section = {
             type: data.dataType,
             content: data.content,
-            rendered_content: data.renderedContent
+            rendered_content: data.renderedContent,
+            timestamp: data.timeStamp
           },
           pageData = this.stateAssignment(this.state.pageData),
           secitonUpdated,
           mode = data.mode,
           pos = data.pos,
           currentSection = data.currentSection;
-  
+      console.log(section);
       if (this.state.existingPage) {
         
         this.setState({

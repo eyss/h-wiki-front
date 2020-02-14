@@ -72,16 +72,6 @@ class Editor extends React.Component {
     const textarea = editor.querySelector('#textarea');
     this.testTextarea(textarea);
     this.setState({ textarea: textarea });
-
-    // textarea.addEventListener('keyup', (e)=>{
-    //   let str = e.target.value,
-    //       l = str.length,
-    //       lastChar = str.substr((l-1), l);
-
-    //   if ((lastChar === '/' || lastChar === '@') && !((e.keyCode>= 37 && e.keyCode <= 40) || (e.keyCode === 8))) {
-    //     this.showAutoComplete(lastChar === '/' ? 'page': 'username')
-    //   }
-    // });
   }
 
   updatePageSections = () => {
@@ -93,7 +83,8 @@ class Editor extends React.Component {
       content: contents.content,
       renderedContent: contents.renderedContent,
       pos: this.props.pos,
-      currentSection: this.props.getContentSection(this.props.pos, this.props.mode)
+      currentSection: this.props.getContentSection(this.props.pos, this.props.mode),
+      timeStamp: parseInt(Date.now())
     };
 
    if (this.props.mode === 'edit') {
@@ -148,51 +139,35 @@ class Editor extends React.Component {
   closeAutoComplete = ()=> {
     this.setState({
       displayAC: 'hidden'
-    }, (_this = this)=>{
-      _this.state.textarea.focus();
     });
   }
 
   setRefContent = (e) => {
-    let iStr,
-        fStr,
+    let iCont,
+        fCont,
         ref = `[${e.target.textContent}]()`,
-        currentPos = this.state.posCText,
-        content = this.state.content;
+        cursorPos = this.state.posCText,
+        currentContent = this.mdEditor.getMdValue(),
+        content = '';
       
-      // Referencia
-      if (this.state.searchAlt !== 'page') {
-        ref = `**@${e.target.textContent}** `;
-      }
-      
-
-    if(currentPos === 0 || currentPos === content.length) {
-      content = content + ref;
-    }
-
-    console.log(this.state.posCText);
-    /*
-    var textarea = this.state.textarea,
-      content = textarea.value,
-      l = content.length,
-      ref = `[${e.target.textContent}]() `,
-      bfstr;
-
-    content = content.substr(0, (l-1));
-
-    bfstr = /\n$/.test(content) ? '\n' : '';
-    
+    // Referencia
     if (this.state.searchAlt !== 'page') {
       ref = `**@${e.target.textContent}** `;
     }
     
-    content = content + bfstr + ref;
-
+    if(cursorPos === 0) {
+      content = ref + content;
+    } else if(cursorPos === content.length) {
+      content = content + ref;
+    } else {
+      iCont = currentContent.substring(0, cursorPos);
+      fCont = currentContent.substring((cursorPos+1), currentContent.length)
+      content = iCont + ref + fCont;
+    }
     this.setState({ content },
       (_this = this) => {
-        _this.closeAutoComplete();
-      }
-    );*/
+      _this.closeAutoComplete();
+    });
   }
 
   setDataType(e) {
@@ -219,8 +194,9 @@ class Editor extends React.Component {
           `
         }).then(m => {
           let matchs = m.data.getPageTitle || m.data.getUsername;
+          console.log(m);
           this.setState({
-            matchs
+            matchs: ['page-0', 'page-1', 'page-2', 'page-3']
           });
         })
       }
