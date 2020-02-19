@@ -20,12 +20,16 @@ export const typeDefs = gql`
     getId: User!
     getPageTitle(title: String!): [String!]!
     getUsername(username: String!): [String!]!
+    getUserInfo(username: String!): [User!]!
+    
   }
 
   input SectionInput {
     type: String!
     content: String!
     rendered_content: String!
+    timestamp: ID!
+
   }
 
   type Mutation {
@@ -41,6 +45,7 @@ export const typeDefs = gql`
     ): Page!
     removeSection(id: ID!): Page!
     updateSection(id: ID!, section: SectionInput!): Section!
+    roleUpdate(currentRole: String!, agentAddress: ID!, newRole:String!): String!
   }
   type Role {
     name: String!
@@ -52,14 +57,15 @@ export const typeDefs = gql`
   }
 
   type User {
-    userName: ID!
+    id:ID!
+    userName: String!
     role: String!
   }
 
   extend type Mutation {
-    createRole(name: String!): Role!
-    assignToRole(roleName: String!, agentId: ID!): Role!
-    unassignToRole(roleName: String!, agentId: ID!): Role!
+    createRole(name: String!): String!
+    assignToRole(roleName: String!, agentId: ID!): String!
+    unassignToRole(roleName: String!, agentId: ID!): String!
     createUser(name: String!): User!
   }
 `;

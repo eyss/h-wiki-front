@@ -31,7 +31,6 @@ input.readonly{ pointer-events: none; }
 }
 
 @mixin buttonPropertys($style, $width : null, $height: null) {
-    background-color: $primary-color;
     border: none;
     padding: .3em 0;
     border-radius: .3em;

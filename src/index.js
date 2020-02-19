@@ -31,7 +31,7 @@ async function start() {
         }
       });
       var client;
-      await connect({ url: "ws://192.168.1.63:3400"})
+      await connect(process.env.NODE_ENV==="development"?{ url: "ws://192.168.1.63:3400"}:undefined)
         .then((context) => {
           const schema = makeExecutableSchema({
             typeDefs,
@@ -69,6 +69,7 @@ async function start() {
           if (res.userName.length > 0) {
             userId = res;     
           }
+
           store.dispatch({
             type: 'SET_USERID',
             value: userId

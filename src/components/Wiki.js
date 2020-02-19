@@ -12,48 +12,49 @@ import { gql } from "apollo-boost";
 
 class Wiki extends React.Component {
     constructor(props) {
-        super(props);
+      super(props);
 
-        this.state = {
-          existingPages: [],
-          pages: [],
-          newData: {
-            title: '',
-            sections: [
-            ]
-          },
-          statusPreload: '',
-          pageData: {
-            title: '',
-            sections: [],
-            position: undefined
-          },
-          existingPage: false,
-          editorSettings: [],
-          pageDataProcess: {},
-          previewData: {},
-          clearingCache: false,
+      this.state = {
+        existingPages: [],
+        pages: [],
+        newData: {
+          title: '',
+          sections: [
+          ]
+        },
+        statusPreload: '',
+        pageData: {
+          title: '',
+          sections: [],
+          position: undefined
+        },
+        existingPage: false,
+        editorSettings: [],
+        pageDataProcess: {},
+        previewData: {},
+        clearingCache: false,
+        //Global variable for content show
+        showPageManager: false,
+        showEditor: false,
+        alert: false,
+        confirmation: false,
+        confirmationMsg: 'equis',
+        preloader: false,
+        loadingPage: true,
 
-          //Global variable for content show
-          showPageManager: false,
-          showEditor: false,
-          alert: false,
-          confirmation: false,
-          confirmationMsg: 'equis',
-          preloader: false,
-          loadingPage: true,
-        };
+        scssVerifyUS: null
+      };
 
-        this.pagesContainer = React.createRef();
-        this.pageStructure = `
-          title
-          sections {
-            id
-            type
-            content
-            rendered_content
-          }
-        `;
+      this.pagesContainer = React.createRef();
+      this.pageStructure = `
+        title
+        sections {
+          id
+          type
+          content
+          rendered_content
+        }
+      `;
     }
 
     componentDidMount() {
@@ -117,12 +118,12 @@ class Wiki extends React.Component {
     }
 
     storePage = () => {
+
       this.setState({
         alert: true,
         preloader: true,
         preloaderMsg: 'storing page'
       });
-
       this.props.client
         .mutate({
           mutation: gql`
@@ -246,15 +247,67 @@ class Wiki extends React.Component {
       return JSON.parse(newState);
     }
 
-    async updatePageSections(mode, pos, content, currentSection) {
+    verifySectionsUpdated = async (param) => {
+      var title = param.title,
+          page = {
+            title: title,
+            sections: []
+          };
+      await this.props.client.resetStore();
+      return await new Promise((resolve, reject) => {
+        if (!this.state.scssVerifyUS) {
+          this.setState({ scssVerifyUS: resolve })
+        }
+        this.props.client
+        .query({
+          query: gql`
+            {
+              page(title:"${title}") {
+                sections {
+                  id
+                  type
+                  content
+                  rendered_content
+                }
+              }
+            }
+          `
+       })
+       .then(res => {
+          let sections = res.data.page.sections;
+          if (param.method === 'addns') {
+            if (sections.length > 0) {
+              page.sections = sections;
+              this.state.scssVerifyUS(page);
+            } else {
+              this.verifySectionsUpdated(param);
+            }
+          } else if (param.method === 'addsb' || param.method === 'addsa') {
+            if (sections.length > param.sections.length) {
+              page.sections = sections;
+              this.state.scssVerifyUS(page);
+            } else {
+              this.verifySectionsUpdated(param);
+            }
+          }
+        })
+        .catch(e => e)
+      })
+    }
+
+    async updatePageSections(data) {
       let state = {},
           section = {
-            type: 'text',
-            content: content,
-            rendered_content: 'text/html'
+            type: data.dataType,
+            content: data.content,
+            rendered_content: data.renderedContent,
+            timestamp: data.timeStamp
           },
           pageData = this.stateAssignment(this.state.pageData),
-          secitonUpdated;
+          secitonUpdated,
+          mode = data.mode,
+          pos = data.pos,
+          currentSection = data.currentSection;
 
       if (this.state.existingPage) {
         this.setState({
@@ -262,10 +315,9 @@ class Wiki extends React.Component {
           preloader: true,
         });
         var pages = this.stateAssignment(this.state.pages);
-
+  
         if (mode === 'addns') {
           this.setState({preloaderMsg: 'Adding section to the page'});
-
           await this.props.client
           .mutate({
             mutation: gql`
@@ -280,18 +332,13 @@ class Wiki extends React.Component {
             `,
             variables: {title: pageData.title, section: section}
           })
-          .then(res => {
-            // var updatedPage = res.data.addSectionToPage;
-          });
-
+          .then(res =>{ });  
         } else if (mode === 'addsb' || mode === 'addsa') {
           this.setState({preloaderMsg: 'Adding section to the page'});
-
           var sections = [];
           for (let i in pageData.sections) {
               sections.push(pageData.sections[i].id);
           }
-
           await this.props.client
           .mutate({
             mutation: gql`
@@ -321,22 +368,10 @@ class Wiki extends React.Component {
               mode
             }
           })
-          .then(res => {
-            let updatedPage = res.data.addOrderedSectionToPage;
-            updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
-            pages.splice(pageData.position, 1, updatedPage);
-
-            updatedPage.position = pageData.position;
-
-            state = {
-              pageData: updatedPage,
-              pages
-            };
-          });
-
+          .then(res => { });
         } else if (mode === 'edit') {
           this.setState({preloaderMsg: 'Updating section to the page'});
-
+  
           await this.props.client
           .mutate({
             mutation: gql`
@@ -353,13 +388,17 @@ class Wiki extends React.Component {
               }
             `,
             variables: { id: currentSection.id, section: {
-              type: currentSection.type,
-              content,
-              rendered_content: currentSection.rendered_content
+              type: data.dataType,
+              content: data.content,
+              rendered_content: data.renderedContent,
+              timestamp: parseInt(Date.now())
             }}
           })
           .then(res => {
-            secitonUpdated = res.data.updateSection;
+            secitonUpdated = currentSection;
+            secitonUpdated.type = data.dataType;
+            secitonUpdated.content = data.content;
+            secitonUpdated.rendered_content = data.renderedContent;
             pageData.sections.splice(pos, 1, secitonUpdated);
             pageData.renderedContent = this.sectionContentFormatter(pageData.sections);
             pages.splice(pageData.position, 1, pageData);
@@ -368,47 +407,62 @@ class Wiki extends React.Component {
               pages
             };
           });
+          await this.props.client.resetStore();
         }
 
-        await this.props.client.resetStore();
-
+        if (mode !== 'edit') {
+          await this.verifySectionsUpdated({
+            title: pageData.title,
+            sections: pageData.sections,
+            method: mode
+          }).then(_page => {
+            this.setState({ scssVerifyUS: null });
+            var updatedPage = _page
+            updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
+            pages.splice(pageData.position, 1, updatedPage);
+            updatedPage.position = pageData.position;
+            state = {
+              pageData: updatedPage,
+              pages
+            };
+          }).catch(e => e);
+        }
       } else {
-
+  
         if (mode === 'addns') {
-
+  
           pageData.sections.push(section);
           state = {pageData};
-
+  
         } else if (mode === 'addsb' || mode === 'addsa') {
-
+  
           if (mode === 'addsa') {
             let sectionsUpdate;
             sectionsUpdate = [section, ...pageData.sections];
             pageData.sections = [];
             pageData.sections = sectionsUpdate;
-
+  
           } else if (mode === 'addsb') {
             pageData.sections.splice((pos+1), 0, section);
           }
-
+  
           state = {pageData};
-
+  
         } else if (mode === 'edit') {
-
+  
           secitonUpdated = currentSection;
-          secitonUpdated.content = content;
+          secitonUpdated.content = data.content;
           pageData.sections.splice(pos, 1, secitonUpdated);
-
+  
           state = { pageData };
           state.alert = false;
         }
-
+  
       }
-
+        
       this.setState(state, (_this=this)=>{
         _this.closeEditor();
       });
-
     }
 
     async removeSection(pos) {
@@ -479,12 +533,7 @@ class Wiki extends React.Component {
         confirmation: false
       }, (_this=this, pageDataProcess = this.state.pageDataProcess)=>{
         if (pageDataProcess.process === 'update') {
-          _this.updatePageSections(
-            pageDataProcess.mode,
-            pageDataProcess.pos,
-            pageDataProcess.content,
-            pageDataProcess.currentSection
-          );
+          _this.updatePageSections(pageDataProcess);
         } else if (pageDataProcess.process === 'remove') {
           _this.removeSection(pageDataProcess.pos);
         }
@@ -541,11 +590,13 @@ class Wiki extends React.Component {
                   return (
                     <div key={key} data-page={key}>
                       <div>
-                        {(key !== 0
-                          && this.props.userId.roles !== 'Reader')
-                          && <button onClick={e =>{this.showPageData(key)}}>
-                          <MdCreate />
-                        </button>}
+                        {(key !== 0 && 
+                          this.props.userId.role !== 'Reader') &&
+                          <button onClick={e =>{this.showPageData(key)}}>
+                            <MdCreate />
+                          </button>
+                        }
+
                       </div>
                       <Page data={pageData} showPage = {this.showPage.bind(this)}  />
                     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MdLibraryAdd, MdAccountCircle, MdAssignmentInd, MdLocalLibrary } from 'react-icons/md';
+import { MdLibraryAdd, MdAccountCircle, MdAssignmentInd, MdHome } from 'react-icons/md';
 class Navbar extends React.Component {
     constructor(props) {
       super(props);
@@ -14,42 +14,42 @@ class Navbar extends React.Component {
                 <div></div>
             </div>
   
-            <div>     
-              <div className={(this.props.page !== 'wiki' || this.props.role === 'Reader')  ? 'only-menu' : ''}>
-                  <ul>
-                    {(this.props.page !== 'wiki') &&
-                      <li>
-                        <Link to='/'>
-                          <MdLocalLibrary className='wiki' />
-                        </Link>
-                      </li>
-                    }
+            <div>
+              <ul>
+              {this.props.page !== 'wiki' &&
+                <li>
+                  <Link to='/'>
+                    <MdHome className='wiki' /> Home
+                  </Link>
+                </li>
+              }
 
-                    {(this.props.page !== 'sign-up' && this.props.userName.length === 0) && 
-                      <li>
-                        <Link to='/sign-up'>
-                          <MdAccountCircle /> Sign Up
-                        </Link>
-                      </li>
-                    }
-                    
-                    {(this.props.page !== 'user-managment' && this.props.role === 'Admin') &&
-                      <li>
-                        <Link to='/user-managment'>
-                          <MdAssignmentInd /> User managment
-                        </Link>
-                      </li>
-                    }
-                </ul>
-              </div>
+              { (!this.props.userName.length && this.props.page !== 'sign-up') && 
+                <li>
+                  <Link to='/sign-up'>
+                    <MdAccountCircle /> Sign Up
+                  </Link>
+                </li>
+              }
 
-              {(this.props.page === 'wiki' && (this.props.role === 'Admin' || this.props.role === 'Editor')) && 
-                <div>
+              { (this.props.role === 'Admin' && this.props.page !== 'user-managment' )&& 
+                <li>
+                  <Link to='/user-managment'>
+                    <MdAssignmentInd /> User managment
+                  </Link>
+                </li>
+              }
+
+              { (this.props.page === 'wiki' && 
+                  (this.props.role === 'Admin' || this.props.role === 'Editor')
+                ) &&
+                <li>
                   <button onClick={this.props.createPage} className='btn-createpage'>
                     <MdLibraryAdd /> Create page
                   </button>
-                </div>
+                </li>
               }
+              </ul>
             </div>
   
             {this.props.loadingPage &&
