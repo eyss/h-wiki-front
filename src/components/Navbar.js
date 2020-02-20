@@ -5,10 +5,8 @@ class Navbar extends React.Component {
     constructor(props) {
       super(props);
       this.state = {};
-      console.log(this.props);
     }
     refreshLinks = ()=>{
-      console.log('Refresh links');
       if (this.props.refreshLinks) {
         this.props.refreshLinks();
       }

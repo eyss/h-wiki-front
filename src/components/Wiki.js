@@ -111,7 +111,6 @@ class Wiki extends React.Component {
             homePage.renderedContent = this.linkFormatter(_pages);
           }
           pages.splice(0,1, homePage);
-          console.log(pages);
           this.setState({
             pages,
             loadingPage: false,
@@ -176,6 +175,7 @@ class Wiki extends React.Component {
           variables: { title: this.state.pageData.title, sections: this.state.pageData.sections }
         })
         .then(e => {
+          console.log(e);
           var pages = this.stateAssignment(this.state.pages),
               link = '- ['+ this.state.pageData.title +']()\n';
 
@@ -345,8 +345,8 @@ class Wiki extends React.Component {
           mode = data.mode,
           pos = data.pos,
           currentSection = data.currentSection;
-
       if (this.state.existingPage) {
+        
         this.setState({
           alert: true,
           preloader: true,
@@ -354,6 +354,11 @@ class Wiki extends React.Component {
         var pages = this.stateAssignment(this.state.pages);
   
         if (mode === 'addns') {
+          /**
+          * This condition does not run because when you delete all 
+          * sections of a page, the application stops working, 
+          * so you cannot add a new section.
+          */
           this.setState({preloaderMsg: 'Adding section to the page'});
           await this.props.client
           .mutate({

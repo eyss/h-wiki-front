@@ -126,7 +126,6 @@ class RolesManagement extends React.Component {
         users: []
       });
     }
-
     render() {
       return (
         <div className='container'>
