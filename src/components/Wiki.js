@@ -42,7 +42,8 @@ class Wiki extends React.Component {
         preloader: false,
         loadingPage: true,
 
-        scssVerifyUS: null
+        scssVerifyUS: null,
+        refreshing: false
       };
 
       this.pagesContainer = React.createRef();
@@ -83,6 +84,42 @@ class Wiki extends React.Component {
           });
         })
         .catch(e => console.log("object", e));
+    }
+
+    refreshLinks = async () => {
+      if (!this.state.refreshing) {
+        await this.props.client.resetStore(); 
+        this.setState({ loadingPage: true,  refreshing: true });
+        var pages = this.stateAssignment(this.state.pages);
+        await this.props.client
+        .query({
+          query: gql`
+            {
+              allPages {
+                title
+              }
+            }
+          `
+        })
+        .then(_pages =>{
+          _pages = _pages.data.allPages;
+          let homePage = { title: 'Homepage' };
+          if (!_pages.length) {
+            homePage.renderedContent = 'No pages have been created';
+            homePage.noLinks = true;
+          } else {
+            homePage.renderedContent = this.linkFormatter(_pages);
+          }
+          pages.splice(0,1, homePage);
+          console.log(pages);
+          this.setState({
+            pages,
+            loadingPage: false,
+            refreshing: false
+          });
+        })
+        .catch(e => console.log("object", e));
+      }
     }
 
     showPage(e){
@@ -578,6 +615,7 @@ class Wiki extends React.Component {
 
           <Navbar
             createPage={this.createPage.bind(this)}
+            refreshLinks={this.refreshLinks.bind(this)}
             loadingPage={this.state.loadingPage}
             page='wiki'
             role={this.props.userId.role}

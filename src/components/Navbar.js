@@ -5,13 +5,20 @@ class Navbar extends React.Component {
     constructor(props) {
       super(props);
       this.state = {};
+      console.log(this.props);
+    }
+    refreshLinks = ()=>{
+      console.log('Refresh links');
+      if (this.props.refreshLinks) {
+        this.props.refreshLinks();
+      }
     }
   
     render() {
       return (
         <nav>
             <div>
-                <div></div>
+                <div onClick={e =>{ this.refreshLinks(e) }}></div>
             </div>
   
             <div>
