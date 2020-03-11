@@ -13,6 +13,7 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'get_titles')
         ({})
         .then(page => {
+          console.log('pGW :', page);
           page = JSON.parse(page);
           if (page.Ok) {
             return page.Ok;
@@ -122,6 +123,7 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'get_page')
         ({ title: title })
         .then(page => {
+          console.log(page);
           page = JSON.parse(page);
           if (page.Ok) {
             return page.Ok.sections;
@@ -172,9 +174,11 @@ export const resolvers = {
   Mutation: {
     async createPageWithSections(a, { title, sections }, { callZome }) {
       return callZome('__H_Wiki', 'wiki', 'create_page_with_sections')
-      ({ title, sections, timestamp: parseInt(Date.now()) })
+      ({ title, sections, timestamp:Date.now().toString()})
       .then(res => {
+        console.log(res);
         if (JSON.parse(res).Ok) {
+          
           return title;
         } else {
           throw new Error(JSON.parse(res).Err);
@@ -184,7 +188,7 @@ export const resolvers = {
 
     async addSectionToPage(a, { title, section }, { callZome }) {
       await callZome('__H_Wiki', 'wiki', 'add_section')
-      ({ title, element: section }).then(res => {
+      ({ title, section: section }).then(res => {
         id = [JSON.parse(res).Ok];
       });
 
@@ -201,8 +205,9 @@ export const resolvers = {
 
     async addOrderedSectionToPage(a, { title, beforeSection, section, sections, mode },{ callZome }) {
       await callZome('__H_Wiki', 'wiki', 'add_section')
-        ({ title, element: section })
+        ({ title, section: section })
         .then(res => {
+          console.log('res add_section', res);
           id = JSON.parse(res).Ok;
         });
       if (mode === 'addsa') {
@@ -217,7 +222,9 @@ export const resolvers = {
       }
 
       return callZome('__H_Wiki', 'wiki', 'update_page')
-        ({ sections, title, timestamp: parseInt(Date.now()) }).then(res => {
+        ({ sections, title, timestamp: Date.now().toString() }).then(res => {
+          console.log('res update_page', res);
+
         if (JSON.parse(res).Ok) {
           return title;
         } else {
@@ -227,7 +234,7 @@ export const resolvers = {
     },
     async updateSection(a, { id, section }, { callZome }) {
       return callZome('__H_Wiki', 'wiki', 'update_element')
-        ({ address: id, element: section })
+        ({ address: id, section: section })
         .then(res => {
           if (JSON.parse(res).Ok) {
             return id;
