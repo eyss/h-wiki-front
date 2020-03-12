@@ -208,33 +208,6 @@ div.simple-preloader{
 
 span[title='Underline']{ display: none!important; }
 
-// To page and preview section
-div.preview-section,
-article.page-container{
-
-    span[title='Underline'], 
-    div.rc-md-navigation,
-    section.sec-md,
-    div.tool-bar{
-        display: none!important;
-    }
-
-    div.rc-md-editor {
-        background-color: transparent;
-        border: none;
-        margin: 0!important;
-    }
-
-    section.sec-html{
-        padding:0;
-        margin:0!important;
-        div.html-wrap{
-            padding:0!important;
-            margin:0!important;
-        }
-    }
-}
-
 div#alert{
     @include modalPropertys(30000);
     >div{

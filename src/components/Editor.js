@@ -45,14 +45,11 @@ class Editor extends React.Component {
   }
 
   componentDidMount() {
-    console.log('Todo bien');
-    console.log('Mode ', this.props.mode );
     if (this.props.mode === 'edit' ) {
       let section = this.props.getContentSection(this.props.pos, this.props.mode),
           state = {},
           mediaType = section.type;
           
-      console.log('Section for editor', section);
 
       if (mediaType === 'Text') {
         state.content = section.content;
@@ -76,7 +73,6 @@ class Editor extends React.Component {
             src : element.getAttribute('src')
           };
         }
-        console.log('State editor ', state);
         this.setState(state);
       }
 

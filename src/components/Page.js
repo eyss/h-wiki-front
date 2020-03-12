@@ -12,18 +12,31 @@ class Page extends React.Component {
         this.article = React.createRef();
 
         this.mdParser = new MarkdownIt();
+        this.container = React.createRef();
     }
 
-    componentDidMount=()=>{ this.setFnLinks(); }
+    componentDidMount=()=>{ 
+        this.setFnLinks(); 
+        this.props.setRenderContent(
+            this.props.data.renderedContent,
+            this.container.current,
+            this.props.dataPage);
+    }
     
-    componentDidUpdate=()=>{ this.setFnLinks(); }
+    componentDidUpdate=()=>{ 
+        this.setFnLinks(); 
+        this.props.setRenderContent(
+            this.props.data.renderedContent,
+            this.container.current,
+            this.props.dataPage);
+    }
 
     setFnLinks = (e, _this = this) => {
         if (this.article.current.getEventListeners('click') === undefined) {
             this.article.current
                 .addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (e.target.nodeName === 'A') {
+                    if (e.target.nodeName === 'A' && !e.target.getAttribute('download')) {
+                        e.preventDefault();
                         _this.props.showPage(e);
                     }
                 });
@@ -32,6 +45,7 @@ class Page extends React.Component {
 
     render() {
         let data = this.props.data;
+        let x = '[asdasd]()';
         return(
             <article ref={this.article}
                 className='page-container'>
@@ -42,11 +56,7 @@ class Page extends React.Component {
                         <h1>{data.title}</h1>
                     </div>
                 </header>
-                <MdEditor
-                    ref={node => this.mdEditor = node}  
-                    value={data.renderedContent}
-                    renderHTML={(text) => this.mdParser.render(text)}
-                />
+                <div ref={this.container}></div>
             </article>
         )
     }

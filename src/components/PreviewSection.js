@@ -7,19 +7,21 @@ export default class PreviewSection extends React.Component {
       super(props);
       this.mdParser = new MarkdownIt();
 
-      this.ps = React.createRef();
+      this.container = React.createRef();
     }
 
     componentDidMount() {
-      this.ps.current
+      this.container.current
       .addEventListener('click', (e)=>{
         if (e.target.nodeName === 'A') {
           e.preventDefault();
         }
       });
+      this.props.setRenderContent(this.props.content, this.container.current);
+    }
 
-      var structure = new DOMParser().parseFromString(this.props.content, 'text/html');
-      this.ps.current.innerHTML = structure.querySelector('body').innerHTML;
+    componentDidUpdate() {
+      this.props.setRenderContent(this.props.content, this.container.current);
     }
 
     showEditor = (mode) => {
@@ -36,9 +38,7 @@ export default class PreviewSection extends React.Component {
     render() {
         return(
             <div className='preview-section'>
-                <div ref={this.ps}>
-                  
-                </div>
+                <div ref={this.container}></div>
 
                 <div>
                   <div>

@@ -13,7 +13,6 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'get_titles')
         ({})
         .then(page => {
-          console.log('pGW :', page);
           page = JSON.parse(page);
           if (page.Ok) {
             return page.Ok;
@@ -123,7 +122,6 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'get_page')
         ({ title: title })
         .then(page => {
-          console.log(page);
           page = JSON.parse(page);
           if (page.Ok) {
             return page.Ok.sections;
