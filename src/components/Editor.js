@@ -47,38 +47,30 @@ class Editor extends React.Component {
   componentDidMount() {
     if (this.props.mode === 'edit' ) {
       let section = this.props.getContentSection(this.props.pos, this.props.mode),
-          state = {},
-          mediaType = section.type;
-          
+          mediaType = section.type,
+          state = {};
 
       if (mediaType === 'Text') {
         state.content = section.content;
       } else {
         let structure = new DOMParser().parseFromString(section.rendered_content, 'text/html'),
             element = structure.querySelector('body').firstChild,
-            src,
-            state;
+            src;
         
-        if (mediaType === 'File') {  
-          let file = {},
+        if (mediaType === 'File') {
+          let file = {};
+
           src = element.getAttribute('href');
           file.name = element.textContent;
-
-          state = {
-            src,
-            file
-          };
+          state = {file};
         } else {
-          state = {
-            src : element.getAttribute('src')
-          };
+          src = element.getAttribute('src');
         }
-        this.setState(state);
+        this.setmediaType(mediaType, src)
       }
-
-      state.mediaType = mediaType;
       state.mediaTypes = [mediaType];
       this.setState(state);
+      
     } else {
       this.setState({
         mediaTypes: [
@@ -140,7 +132,7 @@ class Editor extends React.Component {
         break;
   
         case 'Video':
-          data.renderedContent = `<video autoPlay controls src="${this.state.src}">The “video” tag is not supported by your browser. Click [here] to download the video file.</video>`;
+          data.renderedContent = `<video controls src="${this.state.src}">The “video” tag is not supported by your browser. Click [here] to download the video file.</video>`;
         break;
   
         default:
@@ -208,9 +200,8 @@ class Editor extends React.Component {
     });
   }
 
-  setmediaType(e) {
-    let mediaType = e.target.value,
-        accept;
+  setmediaType(mediaType, src) {
+    let accept;
 
     switch (mediaType) {
       case 'Image':
@@ -228,7 +219,7 @@ class Editor extends React.Component {
     this.setState({
       mediaType,
       accept,
-      src: '',
+      src: src || '',
     });
   }
 
@@ -361,7 +352,7 @@ class Editor extends React.Component {
                 <div>
                   <select
                     value={this.state.mediaType}
-                    onChange={e => {this.setmediaType(e)}}
+                    onChange={e => {this.setmediaType(e.target.value)}}
                     disabled={this.props.mode === 'edit' ? true : false}
                     >
                     {this.state.mediaTypes.map((optVal, key) =>{

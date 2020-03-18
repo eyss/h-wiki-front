@@ -45,7 +45,6 @@ class Page extends React.Component {
 
     render() {
         let data = this.props.data;
-        let x = '[asdasd]()';
         return(
             <article ref={this.article}
                 className='page-container'>

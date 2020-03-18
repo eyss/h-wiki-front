@@ -173,8 +173,7 @@ export const resolvers = {
     async createPageWithSections(a, { title, sections }, { callZome }) {
       return callZome('__H_Wiki', 'wiki', 'create_page_with_sections')
       ({ title, sections, timestamp:Date.now().toString()})
-      .then(res => {
-        console.log(res);
+      .then(res => {    
         if (JSON.parse(res).Ok) {
           
           return title;
@@ -256,8 +255,10 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'create_user')
       ({ data: name })
       .then(res => {
+        console.log(res)
         if (JSON.parse(res).Ok) {
           return JSON.parse(res).Ok;
+
         } else {
           throw new Error(JSON.parse(res).Err);
         }

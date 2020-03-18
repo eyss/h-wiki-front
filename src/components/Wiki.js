@@ -74,14 +74,14 @@ class Wiki extends React.Component {
           `
         })
         .then(pages =>{
-          console.log('Pages ', pages);
           pages = pages.data.allPages;
           let homePage = { title: 'Homepage' };
           if (!pages.length) {
             homePage.renderedContent = 'No pages have been created';
-            homePage.noLinks = true;
+            homePage.links = false;
           } else {
             homePage.renderedContent = this.linkFormatter(pages);
+            homePage.links = pages;
           }
           this.setState({
             pages: [homePage],
@@ -112,9 +112,10 @@ class Wiki extends React.Component {
           let homePage = { title: 'Homepage' };
           if (!_pages.length) {
             homePage.renderedContent = 'No pages have been created';
-            homePage.noLinks = true;
+            homePage.links = true;
           } else {
             homePage.renderedContent = this.linkFormatter(_pages);
+            homePage.links = _pages;
           }
           pages.splice(0,1, homePage);
           this.setState({
@@ -127,8 +128,8 @@ class Wiki extends React.Component {
       }
     }
 
-    async getMedia(address) {
-    
+    async getMedia(address, typeMedia) {
+      console.log(typeMedia);
       const file = await fetchFile(this.props.callZome, '__H_Wiki')(address);
       var media;
 
@@ -140,12 +141,12 @@ class Wiki extends React.Component {
         reader.readAsDataURL(file);
       })
       .then(src => {
-        switch (file.type.split('/')[0]) {
-          case 'image':
+        switch (typeMedia) {
+          case 'Image':
             media = `<img src="${src}" />`;
           break;
 
-          case 'video':
+          case 'Video':
             media = `<video autoPlay controls src="${src}">
               The "video" tag is not supported by your browser. Click [here] to download the video file.
             </video>`;
@@ -174,7 +175,6 @@ class Wiki extends React.Component {
         `
       })
       .then(_page => {
-        console.log(_page);
         page = _page;
       }).catch(e=>{
         this.setState({
@@ -186,21 +186,11 @@ class Wiki extends React.Component {
       sections = page.sections;
       for (var i in sections) {
         if (sections[i].type !== 'Text') {
-          media = await this.getMedia(sections[i].content);
+          media = await this.getMedia(sections[i].content, sections[i].type);
           page.sections[i].rendered_content = media;
         }
       }
-
-      /**
-        Pasar el contenid de la secicon a una tag HTML
-        y luego pasarselo a la funcion sectionCiontentFormatter
-
-      */
-
       page.renderedContent = this.sectionContentFormatter(page.sections);
-
-      // console.log(page.sections);
-      // throw 'wa';sw
 
       var pages = this.state.pages;
       pages.splice(this.getPagePositionPage(e) + 1, pages.length);
@@ -211,27 +201,19 @@ class Wiki extends React.Component {
       }, (_this=this) => {
         _this.pagesContainer.current.scrollTo(parseInt(Math.random().toString().substring(2, 10)), 0);
       });
-
     }
 
     uploadMedia = (sections) => {
       return new Promise( async (resolve, reject) => {
-        console.log('rslvUM', this.state.rslvUM);
 
         if (this.state.rslvUM === null) {
-
           var originResolve = resolve;
           await new Promise((resolve, reject) =>{
             this.setState({ rslvUM: originResolve }, function(){
               resolve(true);
             });
-          })
-          .then(result => {
-            console.log('Resolve seteado', result);
-          })
+          }).then(result => { });
         }
-
-        console.log(this.state.rslvUM)
 
         for (var i in sections) {
           if (!sections[i].uploaded) {
@@ -243,21 +225,13 @@ class Wiki extends React.Component {
         if (section.type !== "Text") {
           const fileAddress = await uploadFile(this.props.callZome, '__H_Wiki')(section.content);
           sections[i].content = fileAddress;
-          sections[i].rendered_content = '-';
+          sections[i].rendered_content = 'uploaded';
         }
 
         sections[i].uploaded = true;
-
-        console.log('sections', sections);
-        console.log('i = ', i);
-        console.log('length until ', sections.length-1);
-        console.log('Section to save ', sections);
-        console.log('Se termina? ', parseInt(i) === (sections.length-1));
-
         if (parseInt(i) === (sections.length-1)) {
           this.state.rslvUM(sections);
         } else {
-          console.log('se ejecuta?');
           this.uploadMedia(sections);
         }
       })
@@ -269,14 +243,6 @@ class Wiki extends React.Component {
         preloader: true,
         preloaderMsg: 'storing page'
       });
-      
-      /**
-        FUNCION QUE AL EJECUTARSE 
-        ALMACENARA LOS FILES EN EL FILE STORAGE
-        Y SUSTITUYA
-        CONTENT = HASH
-        RENDEREDCONTENT = '' (VACIO)
-      */
       var sections = [];
       await this.uploadMedia(this.state.pageData.sections)
       .then(_sections => {
@@ -309,15 +275,15 @@ class Wiki extends React.Component {
           variables: { title: this.state.pageData.title, sections: this.state.pageData.sections }
         })
         .then(e => {
-          console.log(e);
           var pages = this.stateAssignment(this.state.pages),
-              link = '- ['+ this.state.pageData.title +']()\n';
+              links = pages[0].links,
+              link = [{title: this.state.pageData.title}];
 
-          if (this.state.pages[0].noLinks) {
-            pages[0].renderedContent = link;
-            pages[0].noLinks = false;
+          if (typeof(links) === 'boolean') {
+            pages[0].renderedContent = this.linkFormatter(link);
+            pages[0].links = link;
           } else {
-            pages[0].renderedContent = pages[0].renderedContent + link;
+            pages[0].renderedContent = this.linkFormatter(links.concat(link));
           }
 
           this.setState({
@@ -376,7 +342,7 @@ class Wiki extends React.Component {
       var currentPage = this.stateAssignment(this.state.pages[pos]),
         _this = this;
       currentPage.position = pos;
-      // console.log('Data for previous section ', currentPage);
+      console.log('Data for previous section ', currentPage);
       this.setState({
         pageData: currentPage,
         existingPage: true
@@ -391,7 +357,6 @@ class Wiki extends React.Component {
           cont = 2,
           pos;
       for (var i = 0; i<cont; i++) {
-        console.log('parent ', parent);
         if (parent.dataset.page) {
           pos = parent.dataset.page;
           break
@@ -657,11 +622,8 @@ class Wiki extends React.Component {
           state = {pageData};
   
         } else if (mode === 'edit') {
-  
-          secitonUpdated = currentSection;
-          secitonUpdated.content = data.content;
-          pageData.sections.splice(pos, 1, secitonUpdated);
-  
+
+          pageData.sections.splice(pos, 1, section);
           state = { pageData };
           state.alert = false;
         }
@@ -786,7 +748,6 @@ class Wiki extends React.Component {
       subCont.dataset.page = pos;
       subCont.innerHTML = structure.querySelector('body').innerHTML;
       cont.appendChild(subCont);
-      console.log(cont);
       container.innerHTML = cont.innerHTML;
     }
 
