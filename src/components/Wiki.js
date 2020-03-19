@@ -450,47 +450,19 @@ class Wiki extends React.Component {
           alert: true,
           preloader: true,
         });
+
         var pages = this.stateAssignment(this.state.pages);
-
-        // console.log(new Date());
-        // console.log(file);
-        // const { callZome } = await hcConnect({ url: 'ws://192.168.1.63:3400' });
-
-        // console.log('CallZome importado ', callZome);
-        // console.log('Cliente redux ', this.props.client);
-        // const fileAddress = await uploadFile(callZome, '__H_Wiki')(file);
-
-        // console.log('Archivo cargado');
-        // console.log(new Date());
-        // console.log(fileAddress);
-
-        // const getf = await fetchFile(callZome, '__H_Wiki')(fileAddress);
-        // console.log('Get file');
-        // console.log(new Date());
-        // console.log(getf);
-        /**
-          content: undefined
-          renderedContent: undefined
-        */
+        
         if (data.mediaType !== 'Text') {
           const fileAddress = await uploadFile(this.props.callZome, '__H_Wiki')(data.file);
           data.content = fileAddress;
 
           section.content = fileAddress;
           section.rendered_content = '';
-
-
-          console.log('Data ', data);
-          console.log('Section ', section);
         }
         
   
         if (mode === 'addns') {
-          /**
-          * This condition does not run because when you delete all 
-          * sections of a page, the application stops working, 
-          * so you cannot add a new section.
-          */
           this.setState({preloaderMsg: 'Adding section to the page'});
           await this.props.client
           .mutate({
@@ -602,7 +574,6 @@ class Wiki extends React.Component {
           }).catch(e => e);
         }
       } else {
-
         if (mode === 'addns') {
           pageData.sections.push(section);
           state = {pageData};

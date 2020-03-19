@@ -230,9 +230,10 @@ export const resolvers = {
       });
     },
     async updateSection(a, { id, section }, { callZome }) {
-      return callZome('__H_Wiki', 'wiki', 'update_element')
+      return callZome('__H_Wiki', 'wiki', 'update_section')
         ({ address: id, section: section })
         .then(res => {
+          console.log('Error update', res);
           if (JSON.parse(res).Ok) {
             return id;
           } else {
@@ -241,7 +242,7 @@ export const resolvers = {
         });
     },
     async removeSection(a, { id }, { callZome }) {
-      return callZome('__H_Wiki', 'wiki', 'delete_element')
+      return callZome('__H_Wiki', 'wiki', 'delete_section')
         ({ address: id })
         .then(res => {
           if (JSON.parse(res).Ok) {
