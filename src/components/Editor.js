@@ -413,7 +413,7 @@ class Editor extends React.Component {
                       <Fragment>
                         <div>
                           {this.state.src.length > 0 &&
-                            <video autoPlay controls src={this.state.src}>
+                            <video controls src={this.state.src}>
                               The “video” tag is not supported by your browser. Click [here] to download the video file.
                             </video>
                           }

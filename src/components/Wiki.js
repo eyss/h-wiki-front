@@ -107,7 +107,6 @@ class Wiki extends React.Component {
           `
         })
         .then(_pages =>{
-          console.log('Pages of refresh', _pages);
           _pages = _pages.data.allPages;
           let homePage = { title: 'Homepage' };
           if (!_pages.length) {
@@ -129,7 +128,6 @@ class Wiki extends React.Component {
     }
 
     async getMedia(address, typeMedia) {
-      console.log(typeMedia);
       const file = await fetchFile(this.props.callZome, '__H_Wiki')(address);
       var media;
 
@@ -147,7 +145,7 @@ class Wiki extends React.Component {
           break;
 
           case 'Video':
-            media = `<video autoPlay controls src="${src}">
+            media = `<video controls src="${src}">
               The "video" tag is not supported by your browser. Click [here] to download the video file.
             </video>`;
           break;
@@ -246,10 +244,8 @@ class Wiki extends React.Component {
       var sections = [];
       await this.uploadMedia(this.state.pageData.sections)
       .then(_sections => {
-        console.log(_sections);
         this.setState({ rslvUM:null });
         sections = _sections;
-        console.log('Resultado de la subida de archivos ', sections);
       });
 
       for (let i in sections) {
@@ -258,7 +254,6 @@ class Wiki extends React.Component {
       
       this.state.pageData.sections = sections;
 
-      console.log('PageData', this.state.pageData.sections);
 
       await this.props.client
         .mutate({
@@ -321,8 +316,13 @@ class Wiki extends React.Component {
       });
     }
 
-    showPageManager = () => { this.setState({ showPageManager: true }); }
-    closePageManager = () => { this.setState({ showPageManager: false }); }
+    showPageManager = () => { 
+      this.setState({ showPageManager: true }); 
+    }
+
+    closePageManager = () => { 
+      this.setState({ showPageManager: false }); 
+    }
 
     createPage = () =>{
       var _this = this;
@@ -342,7 +342,6 @@ class Wiki extends React.Component {
       var currentPage = this.stateAssignment(this.state.pages[pos]),
         _this = this;
       currentPage.position = pos;
-      console.log('Data for previous section ', currentPage);
       this.setState({
         pageData: currentPage,
         existingPage: true
@@ -452,16 +451,15 @@ class Wiki extends React.Component {
         });
 
         var pages = this.stateAssignment(this.state.pages);
-        
+
         if (data.mediaType !== 'Text') {
           const fileAddress = await uploadFile(this.props.callZome, '__H_Wiki')(data.file);
           data.content = fileAddress;
 
           section.content = fileAddress;
-          section.rendered_content = '';
+          section.rendered_content = 'uploaded';
         }
         
-  
         if (mode === 'addns') {
           this.setState({preloaderMsg: 'Adding section to the page'});
           await this.props.client
@@ -478,7 +476,7 @@ class Wiki extends React.Component {
             `,
             variables: {title: pageData.title, section: section}
           })
-          .then(res =>{ });  
+          .then(res =>{  });  
         } else if (mode === 'addsb' || mode === 'addsa') {
           this.setState({preloaderMsg: 'Adding section to the page'});
           var sections = [];
@@ -517,7 +515,6 @@ class Wiki extends React.Component {
           .then(res => { });
         } else if (mode === 'edit') {
           this.setState({preloaderMsg: 'Updating section to the page'});
-  
           await this.props.client
           .mutate({
             mutation: gql`
@@ -536,15 +533,18 @@ class Wiki extends React.Component {
             variables: { id: currentSection.id, section: {
               type: data.mediaType,
               content: data.content,
-              rendered_content: data.renderedContent,
+              rendered_content: data.mediaType === 'Text' ? data.renderedContent : 'uploaded',
               timestamp: parseInt(Date.now())
             }}
           })
           .then(res => {
             secitonUpdated = currentSection;
             secitonUpdated.type = data.mediaType;
-            secitonUpdated.content = data.content;
+
+            secitonUpdated.content = data.mediaType === 'Text' ? data.content : data.renderedContent;
+
             secitonUpdated.rendered_content = data.renderedContent;
+            
             pageData.sections.splice(pos, 1, secitonUpdated);
             pageData.renderedContent = this.sectionContentFormatter(pageData.sections);
             pages.splice(pageData.position, 1, pageData);
@@ -557,22 +557,42 @@ class Wiki extends React.Component {
         }
 
         if (mode !== 'edit') {
+          var updatedPage = {};
           await this.verifySectionsUpdated({
             title: pageData.title,
             sections: pageData.sections,
             method: mode
           }).then(_page => {
             this.setState({ resolve: null });
-            var updatedPage = _page
-            updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
-            pages.splice(pageData.position, 1, updatedPage);
-            updatedPage.position = pageData.position;
-            state = {
-              pageData: updatedPage,
-              pages
-            };
+            updatedPage = _page;  
           }).catch(e => e);
+
+          var i_section, j_section, match = false;
+
+          for (var i = 0; i< updatedPage.sections.length; i++ ) {
+            i_section = updatedPage.sections[i];
+            for (var j = 0; j<pageData.sections.length; j++) {
+              j_section = pageData.sections[j];
+              if (i_section.id === j_section.id) {
+                match = true;
+                updatedPage.sections.splice(i, 1, j_section);
+              }
+            }
+            if (!match && i_section.type !== 'Text') {
+              let rendered_content = await this.getMedia(i_section.content, i_section.type);
+              updatedPage.sections[i].rendered_content = rendered_content;
+            }
+            match = false;
+          }
+          updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
+          pages.splice(pageData.position, 1, updatedPage);
+          updatedPage.position = pageData.position;
+          state = {
+            pageData: updatedPage,
+            pages
+          };
         }
+
       } else {
         if (mode === 'addns') {
           pageData.sections.push(section);

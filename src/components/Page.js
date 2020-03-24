@@ -55,7 +55,7 @@ class Page extends React.Component {
                         <h1>{data.title}</h1>
                     </div>
                 </header>
-                <div ref={this.container}></div>
+                <div ref={this.container} className='visual-content'></div>
             </article>
         )
     }

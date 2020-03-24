@@ -190,7 +190,7 @@ export const resolvers = {
       });
 
       return callZome('__H_Wiki', 'wiki', 'update_page')
-      ({ sections: id, title, timestamp: parseInt(Date.now()) })
+      ({ sections: id, title, timestamp:Date.now().toString() })
       .then(res => {
         if (JSON.parse(res).Ok) {
           return title;
@@ -204,7 +204,6 @@ export const resolvers = {
       await callZome('__H_Wiki', 'wiki', 'add_section')
         ({ title, section: section })
         .then(res => {
-          console.log('res add_section', res);
           id = JSON.parse(res).Ok;
         });
       if (mode === 'addsa') {
@@ -220,7 +219,6 @@ export const resolvers = {
 
       return callZome('__H_Wiki', 'wiki', 'update_page')
         ({ sections, title, timestamp: Date.now().toString() }).then(res => {
-          console.log('res update_page', res);
 
         if (JSON.parse(res).Ok) {
           return title;
@@ -233,7 +231,6 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'update_section')
         ({ address: id, section: section })
         .then(res => {
-          console.log('Error update', res);
           if (JSON.parse(res).Ok) {
             return id;
           } else {
@@ -256,7 +253,6 @@ export const resolvers = {
       return callZome('__H_Wiki', 'wiki', 'create_user')
       ({ data: name })
       .then(res => {
-        console.log(res)
         if (JSON.parse(res).Ok) {
           return JSON.parse(res).Ok;
 

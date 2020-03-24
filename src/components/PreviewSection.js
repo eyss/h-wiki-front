@@ -38,7 +38,7 @@ export default class PreviewSection extends React.Component {
     render() {
         return(
             <div className='preview-section'>
-                <div ref={this.container}></div>
+                <div ref={this.container} className='visual-content'></div>
 
                 <div>
                   <div>
