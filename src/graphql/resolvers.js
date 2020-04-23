@@ -172,9 +172,10 @@ export const resolvers = {
   Mutation: {
     async createPageWithSections(a, { title, sections }, { callZome }) {
       return callZome('__H_Wiki', 'wiki', 'create_page_with_sections')
-      ({ title, sections, timestamp: parseInt(Date.now()) })
-      .then(res => {
+      ({ title, sections, timestamp:Date.now().toString()})
+      .then(res => {    
         if (JSON.parse(res).Ok) {
+          
           return title;
         } else {
           throw new Error(JSON.parse(res).Err);
@@ -184,12 +185,12 @@ export const resolvers = {
 
     async addSectionToPage(a, { title, section }, { callZome }) {
       await callZome('__H_Wiki', 'wiki', 'add_section')
-      ({ title, element: section }).then(res => {
+      ({ title, section: section }).then(res => {
         id = [JSON.parse(res).Ok];
       });
 
       return callZome('__H_Wiki', 'wiki', 'update_page')
-      ({ sections: id, title, timestamp: parseInt(Date.now()) })
+      ({ sections: id, title, timestamp:Date.now().toString() })
       .then(res => {
         if (JSON.parse(res).Ok) {
           return title;
@@ -201,7 +202,7 @@ export const resolvers = {
 
     async addOrderedSectionToPage(a, { title, beforeSection, section, sections, mode },{ callZome }) {
       await callZome('__H_Wiki', 'wiki', 'add_section')
-        ({ title, element: section })
+        ({ title, section: section })
         .then(res => {
           id = JSON.parse(res).Ok;
         });
@@ -217,7 +218,8 @@ export const resolvers = {
       }
 
       return callZome('__H_Wiki', 'wiki', 'update_page')
-        ({ sections, title, timestamp: parseInt(Date.now()) }).then(res => {
+        ({ sections, title, timestamp: Date.now().toString() }).then(res => {
+
         if (JSON.parse(res).Ok) {
           return title;
         } else {
@@ -226,8 +228,8 @@ export const resolvers = {
       });
     },
     async updateSection(a, { id, section }, { callZome }) {
-      return callZome('__H_Wiki', 'wiki', 'update_element')
-        ({ address: id, element: section })
+      return callZome('__H_Wiki', 'wiki', 'update_section')
+        ({ address: id, section: section })
         .then(res => {
           if (JSON.parse(res).Ok) {
             return id;
@@ -237,7 +239,7 @@ export const resolvers = {
         });
     },
     async removeSection(a, { id }, { callZome }) {
-      return callZome('__H_Wiki', 'wiki', 'delete_element')
+      return callZome('__H_Wiki', 'wiki', 'delete_section')
         ({ address: id })
         .then(res => {
           if (JSON.parse(res).Ok) {
@@ -253,6 +255,7 @@ export const resolvers = {
       .then(res => {
         if (JSON.parse(res).Ok) {
           return JSON.parse(res).Ok;
+
         } else {
           throw new Error(JSON.parse(res).Err);
         }

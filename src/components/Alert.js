@@ -32,6 +32,18 @@ class Alert extends React.Component {
                       </div>
                     </div>
                   }
+
+                  {(!this.props.confirmation && !this.props.preloader) &&
+                    <div className='alert'>
+                      <div>
+                        <label>{this.props.alertMsg}</label>
+                      </div>
+                      <div>
+                        <button onClick={this.props.closeAlert}>Accept</button>
+                      </div>
+                    </div>
+                  }
+
                 </div>
             }
             </Fragment>

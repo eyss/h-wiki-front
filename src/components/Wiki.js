@@ -7,6 +7,8 @@ import Alert from './Alert';
 
 import { MdCreate, MdAdd, MdClose } from "react-icons/md";
 import { connect } from 'react-redux';
+import { uploadFile, fetchFile } from 'holochain-file-storage';
+
 /** Apollo cliente, GraphQL */
 import { gql } from "apollo-boost";
 
@@ -42,7 +44,9 @@ class Wiki extends React.Component {
         preloader: false,
         loadingPage: true,
 
-        scssVerifyUS: null,
+        resolve: null,
+        rslvUM: null,
+        scssUploadMedia: null,
         refreshing: false
       };
 
@@ -74,9 +78,10 @@ class Wiki extends React.Component {
           let homePage = { title: 'Homepage' };
           if (!pages.length) {
             homePage.renderedContent = 'No pages have been created';
-            homePage.noLinks = true;
+            homePage.links = false;
           } else {
             homePage.renderedContent = this.linkFormatter(pages);
+            homePage.links = pages;
           }
           this.setState({
             pages: [homePage],
@@ -106,9 +111,10 @@ class Wiki extends React.Component {
           let homePage = { title: 'Homepage' };
           if (!_pages.length) {
             homePage.renderedContent = 'No pages have been created';
-            homePage.noLinks = true;
+            homePage.links = true;
           } else {
             homePage.renderedContent = this.linkFormatter(_pages);
+            homePage.links = _pages;
           }
           pages.splice(0,1, homePage);
           this.setState({
@@ -121,10 +127,42 @@ class Wiki extends React.Component {
       }
     }
 
-    showPage(e){
+    async getMedia(address, typeMedia) {
+      const file = await fetchFile(this.props.callZome, '__H_Wiki')(address);
+      var media;
+
+      await new Promise((resolve, reject) =>{
+        let reader = new FileReader();
+        reader.onload = function() {
+          resolve(this.result);
+        }
+        reader.readAsDataURL(file);
+      })
+      .then(src => {
+        switch (typeMedia) {
+          case 'Image':
+            media = `<img src="${src}" />`;
+          break;
+
+          case 'Video':
+            media = `<video controls src="${src}">
+              The "video" tag is not supported by your browser. Click [here] to download the video file.
+            </video>`;
+          break;
+
+          default:
+            media = `<a href="${src}" download="${file.name}">${file.name}</a>`;
+          break;
+        }
+      });
+      return media;
+    }
+
+    async showPage(e){
       e.preventDefault();
+      var page, sections, media;
       this.setState({loadingPage: true})
-      this.props.client
+      await this.props.client
       .query({
         query: gql`
           {
@@ -134,33 +172,90 @@ class Wiki extends React.Component {
           }
         `
       })
-      .then(page => {
-        page = page.data.page;
-        page.renderedContent = this.sectionContentFormatter(page.sections);
-        var pages = this.state.pages;
-        pages.splice(this.getPagePositionPage(e) + 1, pages.length);
-        pages = [...pages, page];
-        this.setState({
-          pages,
-          loadingPage: false
-        }, (_this=this) => {
-          _this.pagesContainer.current.scrollTo(parseInt(Math.random().toString().substring(2, 10)), 0);
-        });
+      .then(_page => {
+        page = _page;
       }).catch(e=>{
         this.setState({
           loadingPage: false
         })
       });
+
+      page = page.data.page;
+      sections = page.sections;
+      for (var i in sections) {
+        if (sections[i].type !== 'Text') {
+          media = await this.getMedia(sections[i].content, sections[i].type);
+          page.sections[i].rendered_content = media;
+        }
+      }
+      page.renderedContent = this.sectionContentFormatter(page.sections);
+
+      var pages = this.state.pages;
+      pages.splice(this.getPagePositionPage(e) + 1, pages.length);
+      pages = [...pages, page];
+      this.setState({
+        pages,
+        loadingPage: false
+      }, (_this=this) => {
+        _this.pagesContainer.current.scrollTo(parseInt(Math.random().toString().substring(2, 10)), 0);
+      });
     }
 
-    storePage = () => {
+    uploadMedia = (sections) => {
+      return new Promise( async (resolve, reject) => {
 
+        if (this.state.rslvUM === null) {
+          var originResolve = resolve;
+          await new Promise((resolve, reject) =>{
+            this.setState({ rslvUM: originResolve }, function(){
+              resolve(true);
+            });
+          }).then(result => { });
+        }
+
+        for (var i in sections) {
+          if (!sections[i].uploaded) {
+            var section = sections[i];
+            break;
+          }
+        }
+      
+        if (section.type !== "Text") {
+          const fileAddress = await uploadFile(this.props.callZome, '__H_Wiki')(section.content);
+          sections[i].content = fileAddress;
+          sections[i].rendered_content = 'uploaded';
+        }
+
+        sections[i].uploaded = true;
+        if (parseInt(i) === (sections.length-1)) {
+          this.state.rslvUM(sections);
+        } else {
+          this.uploadMedia(sections);
+        }
+      })
+    }
+
+    storePage = async () => {
       this.setState({
         alert: true,
         preloader: true,
         preloaderMsg: 'storing page'
       });
-      this.props.client
+      var sections = [];
+      await this.uploadMedia(this.state.pageData.sections)
+      .then(_sections => {
+        this.setState({ rslvUM:null });
+        sections = _sections;
+      });
+
+      for (let i in sections) {
+        delete sections[i].uploaded;
+      }
+      
+      this.state.pageData.sections = sections;
+
+
+      await this.props.client
         .mutate({
           mutation: gql`
             mutation CreatePageWithSections(
@@ -175,15 +270,15 @@ class Wiki extends React.Component {
           variables: { title: this.state.pageData.title, sections: this.state.pageData.sections }
         })
         .then(e => {
-          console.log(e);
           var pages = this.stateAssignment(this.state.pages),
-              link = '- ['+ this.state.pageData.title +']()\n';
+              links = pages[0].links,
+              link = [{title: this.state.pageData.title}];
 
-          if (this.state.pages[0].noLinks) {
-            pages[0].renderedContent = link;
-            pages[0].noLinks = false;
+          if (typeof(links) === 'boolean') {
+            pages[0].renderedContent = this.linkFormatter(link);
+            pages[0].links = link;
           } else {
-            pages[0].renderedContent = pages[0].renderedContent + link;
+            pages[0].renderedContent = this.linkFormatter(links.concat(link));
           }
 
           this.setState({
@@ -193,7 +288,6 @@ class Wiki extends React.Component {
           }, (_this=this)=>{
             _this.closePageManager();
           });
-
         });
     }
 
@@ -222,8 +316,13 @@ class Wiki extends React.Component {
       });
     }
 
-    showPageManager = () => { this.setState({ showPageManager: true }); }
-    closePageManager = () => { this.setState({ showPageManager: false }); }
+    showPageManager = () => { 
+      this.setState({ showPageManager: true }); 
+    }
+
+    closePageManager = () => { 
+      this.setState({ showPageManager: false }); 
+    }
 
     createPage = () =>{
       var _this = this;
@@ -243,7 +342,6 @@ class Wiki extends React.Component {
       var currentPage = this.stateAssignment(this.state.pages[pos]),
         _this = this;
       currentPage.position = pos;
-
       this.setState({
         pageData: currentPage,
         existingPage: true
@@ -257,7 +355,6 @@ class Wiki extends React.Component {
           parent = el.parentNode,
           cont = 2,
           pos;
-
       for (var i = 0; i<cont; i++) {
         if (parent.dataset.page) {
           pos = parent.dataset.page;
@@ -292,8 +389,8 @@ class Wiki extends React.Component {
           };
       await this.props.client.resetStore();
       return await new Promise((resolve, reject) => {
-        if (!this.state.scssVerifyUS) {
-          this.setState({ scssVerifyUS: resolve })
+        if (!this.state.resolve) {
+          this.setState({ resolve })
         }
         this.props.client
         .query({
@@ -315,14 +412,14 @@ class Wiki extends React.Component {
           if (param.method === 'addns') {
             if (sections.length > 0) {
               page.sections = sections;
-              this.state.scssVerifyUS(page);
+              this.state.resolve(page);
             } else {
               this.verifySectionsUpdated(param);
             }
           } else if (param.method === 'addsb' || param.method === 'addsa') {
             if (sections.length > param.sections.length) {
               page.sections = sections;
-              this.state.scssVerifyUS(page);
+              this.state.resolve(page);
             } else {
               this.verifySectionsUpdated(param);
             }
@@ -335,30 +432,35 @@ class Wiki extends React.Component {
     async updatePageSections(data) {
       let state = {},
           section = {
-            type: data.dataType,
+            type: data.mediaType,
             content: data.content,
             rendered_content: data.renderedContent,
             timestamp: data.timeStamp
           },
-          pageData = this.stateAssignment(this.state.pageData),
+          pageData = this.state.pageData,
           secitonUpdated,
           mode = data.mode,
           pos = data.pos,
           currentSection = data.currentSection;
+
       if (this.state.existingPage) {
         
         this.setState({
           alert: true,
           preloader: true,
         });
+
         var pages = this.stateAssignment(this.state.pages);
-  
+
+        if (data.mediaType !== 'Text') {
+          const fileAddress = await uploadFile(this.props.callZome, '__H_Wiki')(data.file);
+          data.content = fileAddress;
+
+          section.content = fileAddress;
+          section.rendered_content = 'uploaded';
+        }
+        
         if (mode === 'addns') {
-          /**
-          * This condition does not run because when you delete all 
-          * sections of a page, the application stops working, 
-          * so you cannot add a new section.
-          */
           this.setState({preloaderMsg: 'Adding section to the page'});
           await this.props.client
           .mutate({
@@ -374,7 +476,7 @@ class Wiki extends React.Component {
             `,
             variables: {title: pageData.title, section: section}
           })
-          .then(res =>{ });  
+          .then(res =>{  });  
         } else if (mode === 'addsb' || mode === 'addsa') {
           this.setState({preloaderMsg: 'Adding section to the page'});
           var sections = [];
@@ -413,7 +515,6 @@ class Wiki extends React.Component {
           .then(res => { });
         } else if (mode === 'edit') {
           this.setState({preloaderMsg: 'Updating section to the page'});
-  
           await this.props.client
           .mutate({
             mutation: gql`
@@ -430,17 +531,20 @@ class Wiki extends React.Component {
               }
             `,
             variables: { id: currentSection.id, section: {
-              type: data.dataType,
+              type: data.mediaType,
               content: data.content,
-              rendered_content: data.renderedContent,
+              rendered_content: data.mediaType === 'Text' ? data.renderedContent : 'uploaded',
               timestamp: parseInt(Date.now())
             }}
           })
           .then(res => {
             secitonUpdated = currentSection;
-            secitonUpdated.type = data.dataType;
-            secitonUpdated.content = data.content;
+            secitonUpdated.type = data.mediaType;
+
+            secitonUpdated.content = data.mediaType === 'Text' ? data.content : data.renderedContent;
+
             secitonUpdated.rendered_content = data.renderedContent;
+            
             pageData.sections.splice(pos, 1, secitonUpdated);
             pageData.renderedContent = this.sectionContentFormatter(pageData.sections);
             pages.splice(pageData.position, 1, pageData);
@@ -453,55 +557,69 @@ class Wiki extends React.Component {
         }
 
         if (mode !== 'edit') {
+          var updatedPage = {};
           await this.verifySectionsUpdated({
             title: pageData.title,
             sections: pageData.sections,
             method: mode
           }).then(_page => {
-            this.setState({ scssVerifyUS: null });
-            var updatedPage = _page
-            updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
-            pages.splice(pageData.position, 1, updatedPage);
-            updatedPage.position = pageData.position;
-            state = {
-              pageData: updatedPage,
-              pages
-            };
+            this.setState({ resolve: null });
+            updatedPage = _page;  
           }).catch(e => e);
+
+          var i_section, j_section, match = false;
+
+          for (var i = 0; i< updatedPage.sections.length; i++ ) {
+            i_section = updatedPage.sections[i];
+            for (var j = 0; j<pageData.sections.length; j++) {
+              j_section = pageData.sections[j];
+              if (i_section.id === j_section.id) {
+                match = true;
+                updatedPage.sections.splice(i, 1, j_section);
+              }
+            }
+            if (!match && i_section.type !== 'Text') {
+              let rendered_content = await this.getMedia(i_section.content, i_section.type);
+              updatedPage.sections[i].rendered_content = rendered_content;
+            }
+            match = false;
+          }
+          updatedPage.renderedContent = this.sectionContentFormatter(updatedPage.sections);
+          pages.splice(pageData.position, 1, updatedPage);
+          updatedPage.position = pageData.position;
+          state = {
+            pageData: updatedPage,
+            pages
+          };
         }
+
       } else {
-  
         if (mode === 'addns') {
-  
           pageData.sections.push(section);
           state = {pageData};
   
         } else if (mode === 'addsb' || mode === 'addsa') {
-  
-          if (mode === 'addsa') {
+          if (mode === 'addsb') {
+            pageData.sections.splice((pos+1), 0, section);
+
+          } else {
             let sectionsUpdate;
             sectionsUpdate = [section, ...pageData.sections];
             pageData.sections = [];
             pageData.sections = sectionsUpdate;
   
-          } else if (mode === 'addsb') {
-            pageData.sections.splice((pos+1), 0, section);
           }
   
           state = {pageData};
   
         } else if (mode === 'edit') {
-  
-          secitonUpdated = currentSection;
-          secitonUpdated.content = data.content;
-          pageData.sections.splice(pos, 1, secitonUpdated);
-  
+
+          pageData.sections.splice(pos, 1, section);
           state = { pageData };
           state.alert = false;
         }
-  
       }
-        
+
       this.setState(state, (_this=this)=>{
         _this.closeEditor();
       });
@@ -600,17 +718,28 @@ class Wiki extends React.Component {
     linkFormatter(links){
       let content = '', i;
       for(i in links){
-        content = content + '- [' + links[i].title + ']() \n';
+        content = content + `<li><a href>${links[i].title}</a></li>`;
       }
-      return content;
+      return `<ul>${content}</ul>`;
     }
 
     sectionContentFormatter(sections){
       let content = '', i;
       for (i in sections) {
-        content = content + sections[i].content + '\n\n';
+        content = content + sections[i].rendered_content;
       }
       return content;
+    }
+
+    setRenderContent(content, container, pos = 0) {
+      let structure = new DOMParser().parseFromString(content, 'text/html'),
+          cont = document.createElement('div'),
+          subCont = document.createElement('div');
+      
+      subCont.dataset.page = pos;
+      subCont.innerHTML = structure.querySelector('body').innerHTML;
+      cont.appendChild(subCont);
+      container.innerHTML = cont.innerHTML;
     }
 
     render() {
@@ -641,7 +770,12 @@ class Wiki extends React.Component {
                         }
 
                       </div>
-                      <Page data={pageData} showPage = {this.showPage.bind(this)}  />
+                      <Page 
+                        data={pageData} 
+                        showPage = {this.showPage.bind(this)}
+                        setRenderContent = {this.setRenderContent.bind(this)}
+                        dataPage={key}
+                      />
                     </div>
                   )
                 })}
@@ -694,10 +828,11 @@ class Wiki extends React.Component {
                         <PreviewSection
                           key = {key}
                           pos = {key}
-                          content = {data.content}
+                          content = {data.rendered_content}
                           showEditor = {this.showEditor.bind(this)}
                           removeSection = {this.removeSection.bind(this)}
                           showConfirmation={this.showConfirmation.bind(this)}
+                          setRenderContent = {this.setRenderContent.bind(this)}
                         />
                       )
                     })}
@@ -759,7 +894,8 @@ function mapDispatchToProps(dispatch) {
 function mapStateToProps(state) {
   return {
     client: state.client,
-    userId: state.userId
+    userId: state.userId,
+    callZome: state.callZome
   }
 }
 

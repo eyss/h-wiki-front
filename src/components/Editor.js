@@ -1,11 +1,17 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React from 'react';
+import React, { Fragment } from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
-import { MdClose, MdFindInPage, MdPersonPin, MdImage, MdFileUpload } from 'react-icons/md';
+import { MdClose, 
+          MdFindInPage, 
+          MdPersonPin, 
+          MdImage, 
+          MdFileUpload, 
+          MdPlayCircleFilled, 
+          MdAttachFile } from 'react-icons/md';
 import { connect } from 'react-redux';
 import { gql } from "apollo-boost";
-import Compress from 'compress.js'
+import Alert from './Alert';
 
 class Editor extends React.Component {
   mdEditor = null;
@@ -19,9 +25,16 @@ class Editor extends React.Component {
       searchAlt: 'page',
       textarea: undefined,
       matchs: [],
-      dataType: undefined,
-      dataTypes: [],
+      mediaType: undefined,
+      mediaTypes: [],
       image: '',
+      file: undefined,
+      src: '',
+      accept: '',
+      alert: false,
+      alertMsg: '',
+      preloaderMsg: '',
+      preloader: false,
     };
     this.mdParser = new MarkdownIt();
     this.editor = React.createRef();
@@ -30,29 +43,41 @@ class Editor extends React.Component {
     this.input = React.createRef();
     this.imageUploader = React.createRef();
   }
-  
-  componentDidMount() {
 
+  componentDidMount() {
     if (this.props.mode === 'edit' ) {
       let section = this.props.getContentSection(this.props.pos, this.props.mode),
-          state= {},
-          dataType = section.type;
-          
-      if(dataType === 'Text') {
-        state.content = section.content;
-      } else if (dataType === 'Image') {
-        let img = new DOMParser().parseFromString(section.rendered_content, 'text/html');
-        state.image = img.querySelector('img').getAttribute('src');
-      }
+          mediaType = section.type,
+          state = {};
 
-      state.dataType = dataType;
-      state.dataTypes = [dataType];
+      if (mediaType === 'Text') {
+        state.content = section.content;
+      } else {
+        let structure = new DOMParser().parseFromString(section.rendered_content, 'text/html'),
+            element = structure.querySelector('body').firstChild,
+            src;
+        
+        if (mediaType === 'File') {
+          let file = {};
+
+          src = element.getAttribute('href');
+          file.name = element.textContent;
+          state = {file};
+        } else {
+          src = element.getAttribute('src');
+        }
+        this.setmediaType(mediaType, src)
+      }
+      state.mediaTypes = [mediaType];
       this.setState(state);
+      
     } else {
       this.setState({
-        dataTypes: [
+        mediaTypes: [
           'Text',
-          'Image'
+          'Image',
+          'Video',
+          'File'
         ]
       });
     }
@@ -76,15 +101,16 @@ class Editor extends React.Component {
     data = {
       process: 'update',
       mode: this.props.mode,
-      dataType: this.state.dataType || 'Text',
+      mediaType: this.state.mediaType || 'Text',
       content: contents.content,
       renderedContent: contents.renderedContent,
       pos: this.props.pos,
       currentSection: this.props.getContentSection(this.props.pos, this.props.mode),
-      timeStamp: parseInt(Date.now())
+      timeStamp: parseInt(Date.now()),
+      file: this.state.file
     };
 
-   if (this.props.mode === 'edit') {
+    if (this.props.mode === 'edit') {
       this.props.showConfirmation(data);
     } else {
       this.props.updatePageSections(data);
@@ -92,26 +118,33 @@ class Editor extends React.Component {
   }
 
   getContents(){
-    let dataType = this.state.dataType,
-        data = {
-          content: undefined,
-          renderedContent: undefined,
-        };
+    let mediaType = this.state.mediaType,
+        data = {};
 
-    if (dataType === 'Text' || !dataType) {
+    if (mediaType === 'Text' || !mediaType) {
       data.content = this.mdEditor.getMdValue();
       data.renderedContent = this.mdEditor.getHtmlValue();
-    }
-
-    if (dataType === 'Image') {
-      data.content = `![](${this.state.image})`;
-      data.renderedContent = `<img src="${this.state.image}" />`;
+    } else {
+      data.content = this.state.file;
+      switch (mediaType) {
+        case 'Image':
+          data.renderedContent = `<img src="${this.state.src}" />`;
+        break;
+  
+        case 'Video':
+          data.renderedContent = `<video controls src="${this.state.src}">The “video” tag is not supported by your browser. Click [here] to download the video file.</video>`;
+        break;
+  
+        default:
+          data.renderedContent = `<a href="${this.state.src}" download="${this.state.file.name}">${this.state.file.name}</a>`;
+        break;
+      }
     }
     return data;
   }
 
-  setStyleAutoComplete = ()=>{
-    if (this.state.dataType === 'Text' || !this.state.dataTye) {
+  setStyleAutoComplete = () =>{
+    if ((this.state.mediaType === 'Text' || !this.state.dataTye) && this.editor.current) {
       const textarea = this.editor.current.querySelector('#textarea'),
           cordinates = textarea.getBoundingClientRect(),
           { width, height, left, top } = cordinates,
@@ -167,9 +200,26 @@ class Editor extends React.Component {
     });
   }
 
-  setDataType(e) {
+  setmediaType(mediaType, src) {
+    let accept;
+
+    switch (mediaType) {
+      case 'Image':
+        accept = 'image/*';
+      break;
+
+      case 'Video':
+        accept = 'video/*';
+      break;
+
+      default:
+        accept = '*'
+      break;
+    }
     this.setState({
-      dataType: e.target.value
+      mediaType,
+      accept,
+      src: src || '',
     });
   }
 
@@ -193,22 +243,51 @@ class Editor extends React.Component {
     });
   }
 
-  upLoadImage = (evt) => {
-    const compress = new Compress(),
-          files = [...evt.target.files];
+  upLoadFile = async (evt) => {
 
-    compress.compress(files, {
-      size: 4,
-      quality: 0.5,
-      maxWidth: 1920,
-      maxHeight: 1920,
-      resize: true
-    }).then((data) => {
-      const image = data[0].prefix + data[0].data;
+    this.setState({
+      alert: true,
+      preloader: true,
+      preloaderMsg: 'Uploading ' + this.state.mediaType
+    });
+    
+    var file = evt.target.files[0] || undefined,
+        _this = this,
+        reader = new FileReader();
+  
+    reader.onload = function() {
+        let state = {};
+
+        if (_this.state.mediaType !== 'File' && _this.state.mediaType.toLowerCase() !== type) {
+          let comp = type === 'image' ? 'an ' : 'a ';
+          
+          state = {
+            alertMsg : 'The file is not ' + comp + _this.state.mediaType.toLowerCase(),
+            preloader : false,
+            preloaderMsg : '',
+          };
+        } else {
+          state = {
+            src: this.result,
+            file,
+            alert: false,
+            preloader: false,
+            preloaderMsg: ''
+          };
+        }
+        _this.setState(state);
+    };
+
+    if (file) {
+      var type = file.type.split('/')[0];
+      reader.readAsDataURL(file); 
+    } else {
       this.setState({
-        image
+        alert: false,
+        preloader: false,
+        preloaderMsg: ''
       });
-    })
+    }
   }
 
   testTextarea(textarea){
@@ -253,6 +332,10 @@ class Editor extends React.Component {
     return -1;
   }
 
+  closeAlert = () => {
+    this.setState({ alert: false });
+  }
+
   render() {
     return (
       <div id='editor'>
@@ -268,11 +351,11 @@ class Editor extends React.Component {
                 </div>
                 <div>
                   <select
-                    value={this.state.dataType}
-                    onChange={e => {this.setDataType(e)}}
+                    value={this.state.mediaType}
+                    onChange={e => {this.setmediaType(e.target.value)}}
                     disabled={this.props.mode === 'edit' ? true : false}
                     >
-                    {this.state.dataTypes.map((optVal, key) =>{
+                    {this.state.mediaTypes.map((optVal, key) =>{
                       return ( 
                         <option key={key} value={optVal}>{optVal}</option>
                       )
@@ -283,7 +366,7 @@ class Editor extends React.Component {
             </header>
             <section>
 
-              {(this.state.dataType === 'Text' || !this.state.dataType) &&
+              {(this.state.mediaType === 'Text' || !this.state.mediaType) &&
                 <div ref={this.editor} className='hw-editor-container'>
                   <MdEditor
                     ref={node => this.mdEditor = node}  
@@ -293,32 +376,69 @@ class Editor extends React.Component {
                 </div>
               }
 
-              {this.state.dataType === 'Image' &&
-                <div className='hw-uploadImage-container'>
+              {(this.state.mediaType !== 'Text' && this.state.mediaType) &&
+                <div className='hw-upLoadFile-container'>
 
                   <div>
                     <button onClick={ e => { this.imageUploader.current.click() }}>
-                      <MdFileUpload /> Upload image
+                      <MdFileUpload /> Upload {this.state.mediaType}
                     </button>
-
                     <input
                       hidden
                       type="file"
                       name=""
                       id="upload"
-                      accept="image/*"
+                      accept={this.state.accept}
                       ref={this.imageUploader}
-                      onChange={e => { this.upLoadImage(e) }}
+                      onChange={e => { this.upLoadFile(e) }}
                     />
                   </div>
 
                   <div>
-                    <div>
-                      <img src={this.state.image} />
-                    </div>
-                    <div>
-                      <MdImage />
-                    </div>
+
+                    {(this.state.mediaType === 'Image') &&
+                      <Fragment>
+                        <div>
+                          {this.state.src.length > 0 &&
+                            <img src={this.state.src} />
+                          }
+                        </div>
+                        <div>
+                          <MdImage /> 
+                        </div>
+                      </Fragment>
+                    }
+
+                    {this.state.mediaType === 'Video' &&
+                      <Fragment>
+                        <div>
+                          {this.state.src.length > 0 &&
+                            <video controls src={this.state.src}>
+                              The “video” tag is not supported by your browser. Click [here] to download the video file.
+                            </video>
+                          }
+                        </div>
+                        <div>
+                          <MdPlayCircleFilled />
+                        </div>
+                      </Fragment>
+                    }
+
+                    {this.state.mediaType === 'File' &&
+                      <Fragment>
+                        <div>
+                          {this.state.src.length > 0 &&
+                            <a href={this.state.src} download={this.state.file.name}>
+                              {this.state.file.name}
+                            </a>
+                          }
+                        </div>
+                        <div>
+                          <MdAttachFile />
+                        </div>
+                      </Fragment>
+                    }
+
                   </div>
 
                 </div>
@@ -372,6 +492,14 @@ class Editor extends React.Component {
             </div>
 
           </div>
+          <Alert
+            alert = {this.state.alert}
+            alertMsg = {this.state.alertMsg}
+            preloaderMsg = {this.state.preloaderMsg}
+            preloader = {this.state.preloader}
+            closeAlert = {this.closeAlert}
+          />
+          
         </div>
       </div>
     )
