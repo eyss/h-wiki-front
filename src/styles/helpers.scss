@@ -208,29 +208,85 @@ div.simple-preloader{
 
 span[title='Underline']{ display: none!important; }
 
-// To page and preview section
-div.preview-section,
-article.page-container{
-
-    span[title='Underline'], 
-    div.rc-md-navigation,
-    section.sec-md,
-    div.tool-bar{
-        display: none!important;
+div#alert{
+    @include modalPropertys(30000);
+    >div{
+        display: flex;
+        flex-direction: column;
+        background-color: #FFFFFF;
+        padding: .5em 1em;
+        border-radius: .4em;
+        min-width: 306px;
+        max-width: 306px;
     }
 
-    div.rc-md-editor {
-        background-color: transparent;
-        border: none;
-        margin: 0!important;
+    >div.confirmation{
+        
+        position: relative;
+        top: -15%;
+        >div:first-child{
+            padding: 1.7em 0;
+            >label{
+                color: #6f6f6f;
+                font-size: 0.983em;
+            }
+        }
+
+        >div:last-child{
+            display: flex;
+            justify-content: flex-end;
+            >button {
+                &:first-child{
+                    @include buttonPropertys('contoured', 40px, 28px);
+                    transition-duration: .3s;
+                    margin-right: 1em;
+                    &:hover { background-color: oPrimaryColor(.1); }
+                }
+                &:last-child{
+                    @include buttonPropertys('normal', 40px, 28px);
+                }
+            }
+        }
     }
 
-    section.sec-html{
-        padding:0;
-        margin:0!important;
-        div.html-wrap{
-            padding:0!important;
-            margin:0!important;
+    >div.preloader{
+        position: relative;
+        >div:first-child{
+            display: flex;
+            justify-content: center;
+            padding: .8em 0;
+            >label {
+                color: #6f6f6f;
+                font-size: 0.975em;
+            }
+        }
+
+        >div:last-child{
+            position: relative;
+            padding: .2em 0;
+        }
+    }
+
+    >div.alert{
+        background-color: #f3f3f3;
+        border: 1px solid rgba(97,97,97, .1);
+        >div{
+            display: flex;
+            justify-content: center;
+        }
+        >div:first-child{
+            padding: .5em 0;
+            >label{
+                font-size: .87em;
+                color: #888888;
+            }
+        }
+
+        >div:last-child{
+            padding-top: .5em;
+            >button{
+                @include buttonPropertys('normal', 80px);
+            }
         }
     }
 }

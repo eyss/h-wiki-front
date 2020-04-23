@@ -15,6 +15,7 @@
     "geteventlisteners": "^1.1.0",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
+    "holochain-file-storage": "0.0.1",
     "markdown-it": "^10.0.0",
     "node-sass": "^4.13.0",
     "react": "^16.12.0",
