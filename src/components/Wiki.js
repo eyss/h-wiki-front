@@ -219,7 +219,12 @@ class Wiki extends React.Component {
             break;
           }
         }
-      
+
+        if (!section) {
+          resolve(sections);
+          return;
+        }
+
         if (section.type !== "Text") {
           const fileAddress = await uploadFile(this.props.callZome, '__H_Wiki')(section.content);
           sections[i].content = fileAddress;
