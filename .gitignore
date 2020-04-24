@@ -10,6 +10,8 @@
 
 # production
 /build
+/.cargo
+/target
 
 # misc
 .DS_Store
