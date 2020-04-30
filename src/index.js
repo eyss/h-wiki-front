@@ -34,7 +34,7 @@ async function start() {
       });
 
       var client,
-          hcConnect = connect(process.env.NODE_ENV==="development" ? { url: "ws://0.0.0:3400"} : undefined),
+          hcConnect = connect(process.env.NODE_ENV==="development" ? { url: "ws://0.0.0.0:3400"} : undefined),
           {callZome} = await hcConnect;
         
           store.dispatch({
