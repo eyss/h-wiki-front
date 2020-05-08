@@ -15,8 +15,8 @@ Start the holochain backend first, see https://github.com/eyss/h-wiki-back#getti
 Run this:
 
 ```
-npm install
-npm start
+yarn
+yarn start
 ```
 
 You will be automatically redirected to `https://localhost:3000`. This hApp uses the Progenitor pattern, which expects an admin user. If you've used the sample conductor config in the `h-wiki-back` repo, you should already be the progenitor.
