@@ -46,6 +46,11 @@ async function start() {
     value: callZome,
   });
 
+  store.dispatch({
+    type: "SET_CALLZOME",
+    value: callZome,
+  });
+
   await hcConnect.then((context) => {
     const schema = makeExecutableSchema({
       typeDefs,
