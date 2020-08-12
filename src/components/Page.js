@@ -32,7 +32,8 @@ class Page extends React.Component {
   };
 
   setFnLinks = (e, _this = this) => {
-    if (this.article.current.getEventListeners("click") === undefined) {
+    if (!this.article.current.added) {
+      this.article.current.added = true;
       this.article.current.addEventListener("click", function (e) {
         if (e.target.nodeName === "A" && !e.target.getAttribute("download")) {
           e.preventDefault();
